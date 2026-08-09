@@ -179,9 +179,96 @@ const deleteOrder = async (req, res) => {
   }
 };
 
+// @desc    Bulk update order status
+// @route   PUT /api/admin/orders/bulk-status
+// @access  Private/Admin
+const bulkUpdateOrderStatus = async (req, res) => {
+  try {
+    const { orderIds, status } = req.body;
+    const allowedStatuses = ['Pending', 'Confirmed', 'Cancelled'];
+
+    if (!Array.isArray(orderIds) || orderIds.length === 0) {
+      return res.status(400).json({ message: 'No orders selected.' });
+    }
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({ message: 'Invalid order status.' });
+    }
+
+    const validObjectIds = orderIds.filter((id) => mongoose.Types.ObjectId.isValid(id));
+    if (validObjectIds.length === 0) {
+      return res.status(400).json({ message: 'Invalid order IDs provided.' });
+    }
+
+    const result = await Order.updateMany(
+      { _id: { $in: validObjectIds } },
+      { $set: { status } }
+    );
+
+    if (status === 'Cancelled') {
+      try {
+        const notifications = validObjectIds.map((id) => ({
+          type: 'order_cancelled',
+          title: 'Order Cancelled',
+          message: `Order was cancelled by administrator during bulk update.`,
+          link: `/admin/orders/${id}`
+        }));
+        await Notification.insertMany(notifications);
+      } catch (notifErr) {
+        console.error('Failed to create bulk cancellation notifications:', notifErr);
+      }
+    }
+
+    return res.status(200).json({
+      message: `Successfully updated status to ${status} for ${result.modifiedCount || validObjectIds.length} orders.`,
+      modifiedCount: result.modifiedCount
+    });
+  } catch (error) {
+    console.error('Bulk Update Order Status Error:', error);
+    return res.status(500).json({ message: 'Server error. Failed to bulk update order status.' });
+  }
+};
+
+// @desc    Bulk delete orders
+// @route   POST /api/admin/orders/bulk-delete
+// @access  Private/Admin
+const bulkDeleteOrders = async (req, res) => {
+  try {
+    const { orderIds } = req.body;
+
+    if (!Array.isArray(orderIds) || orderIds.length === 0) {
+      return res.status(400).json({ message: 'No orders selected.' });
+    }
+
+    const validObjectIds = orderIds.filter((id) => mongoose.Types.ObjectId.isValid(id));
+    if (validObjectIds.length === 0) {
+      return res.status(400).json({ message: 'Invalid order IDs provided.' });
+    }
+
+    const result = await Order.deleteMany({ _id: { $in: validObjectIds } });
+
+    try {
+      const notifLinks = validObjectIds.map((id) => `/admin/orders/${id}`);
+      await Notification.deleteMany({ link: { $in: notifLinks } });
+    } catch (notifErr) {
+      console.error('Failed to cleanup bulk order notifications:', notifErr);
+    }
+
+    return res.status(200).json({
+      message: `Successfully deleted ${result.deletedCount || validObjectIds.length} orders.`,
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    console.error('Bulk Delete Orders Error:', error);
+    return res.status(500).json({ message: 'Server error. Failed to bulk delete orders.' });
+  }
+};
+
 module.exports = {
   getAllOrders,
   getOrderById,
   updateOrderStatus,
-  deleteOrder
+  deleteOrder,
+  bulkUpdateOrderStatus,
+  bulkDeleteOrders,
 };

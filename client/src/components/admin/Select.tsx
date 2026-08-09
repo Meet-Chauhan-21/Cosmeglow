@@ -17,6 +17,7 @@ interface SelectProps {
   className?: string;
   hClass?: string; // custom height class, e.g. "h-10" or "h-12"
   buttonClassName?: string; // custom button styling
+  placement?: 'bottom' | 'top';
 }
 
 export const Select: React.FC<SelectProps> = ({
@@ -29,16 +30,18 @@ export const Select: React.FC<SelectProps> = ({
   className = '',
   hClass = 'h-11',
   buttonClassName = '',
+  placement = 'bottom',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
+  const [coords, setCoords] = useState({ top: 0, bottom: 0, left: 0, width: 0 });
 
   const updateCoords = () => {
     if (containerRef.current) {
       const rect = containerRef.current.getBoundingClientRect();
       setCoords({
         top: rect.bottom,
+        bottom: window.innerHeight - rect.top,
         left: rect.left,
         width: rect.width,
       });
@@ -100,16 +103,24 @@ export const Select: React.FC<SelectProps> = ({
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, y: -8, scale: 0.98 }}
+            initial={{ opacity: 0, y: placement === 'top' ? 8 : -8, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -8, scale: 0.98 }}
+            exit={{ opacity: 0, y: placement === 'top' ? 8 : -8, scale: 0.98 }}
             transition={{ duration: 0.12, ease: 'easeOut' }}
             className="fixed z-50 bg-white border border-slate-200 rounded-xl shadow-lg max-h-60 overflow-y-auto py-1.5 font-sans"
-            style={{
-              top: `${coords.top + 6}px`,
-              left: `${coords.left}px`,
-              width: `${coords.width}px`,
-            }}
+            style={
+              placement === 'top'
+                ? {
+                    bottom: `${coords.bottom + 6}px`,
+                    left: `${coords.left}px`,
+                    width: `${coords.width}px`,
+                  }
+                : {
+                    top: `${coords.top + 6}px`,
+                    left: `${coords.left}px`,
+                    width: `${coords.width}px`,
+                  }
+            }
           >
             {options.length === 0 ? (
               <div className="px-4 py-2 text-xs text-slate-400">No options available</div>
@@ -124,7 +135,7 @@ export const Select: React.FC<SelectProps> = ({
                       onChange(opt.value);
                       setIsOpen(false);
                     }}
-                    className={`w-full flex items-center justify-between px-4 py-2 text-sm text-left transition-colors cursor-pointer hover:bg-slate-55 hover:bg-slate-50 ${
+                    className={`w-full flex items-center justify-between px-4 py-2 text-sm text-left transition-colors cursor-pointer hover:bg-slate-50 ${
                       isSelected
                         ? 'text-indigo-600 bg-indigo-50/30 font-semibold'
                         : 'text-slate-700'

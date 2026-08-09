@@ -128,6 +128,7 @@ export const Pagination: React.FC<PaginationProps> = ({
             <div className="w-16 text-left">
               <Select
                 value={String(recordsPerPage)}
+                placement="top"
                 onChange={(val) => {
                   onRecordsPerPageChange(Number(val));
                   onPageChange(1);

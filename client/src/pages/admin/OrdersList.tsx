@@ -21,6 +21,10 @@ const OrderStatusSelect: React.FC<{
   const [status, setStatus] = useState(initialStatus);
   const [updating, setUpdating] = useState(false);
 
+  useEffect(() => {
+    setStatus(initialStatus);
+  }, [initialStatus]);
+
   const handleStatusChange = async (newStatus: string) => {
     if (!accessToken) return;
     setUpdating(true);
@@ -217,6 +221,99 @@ const OrdersList: React.FC = () => {
     fetchOrders();
   }, [accessToken, currentPage, recordsPerPage, searchQuery, statusFilter, dateFilter]);
 
+  // Selection & Bulk Actions States
+  const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
+  const [bulkDeleteModalOpen, setBulkDeleteModalOpen] = useState(false);
+  const [bulkUpdating, setBulkUpdating] = useState(false);
+
+  // Clear selections when filters or pagination changes
+  useEffect(() => {
+    setSelectedOrderIds([]);
+  }, [currentPage, recordsPerPage, searchQuery, statusFilter, dateFilter]);
+
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      const currentPageIds = orders.map((o) => o._id);
+      setSelectedOrderIds((prev) => Array.from(new Set([...prev, ...currentPageIds])));
+    } else {
+      const currentPageIds = new Set(orders.map((o) => o._id));
+      setSelectedOrderIds((prev) => prev.filter((id) => !currentPageIds.has(id)));
+    }
+  };
+
+  const handleSelectRow = (key: string, checked: boolean) => {
+    if (checked) {
+      setSelectedOrderIds((prev) => [...prev, key]);
+    } else {
+      setSelectedOrderIds((prev) => prev.filter((id) => id !== key));
+    }
+  };
+
+  const handleClearSelection = () => {
+    setSelectedOrderIds([]);
+  };
+
+  const handleBulkStatusChange = async (newStatus: string) => {
+    if (!accessToken || selectedOrderIds.length === 0 || !newStatus) return;
+    setBulkUpdating(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/orders/bulk-status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ orderIds: selectedOrderIds, status: newStatus }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        toast.success(data.message || `Updated status to ${newStatus} for selected orders`);
+        const updatedIds = [...selectedOrderIds];
+        setOrders((prev) =>
+          prev.map((o) => (updatedIds.includes(o._id) ? { ...o, status: newStatus } : o))
+        );
+        setSelectedOrderIds([]);
+        await fetchOrders();
+      } else {
+        toast.error(data.message || 'Failed to update order status');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Error performing bulk status update');
+    } finally {
+      setBulkUpdating(false);
+    }
+  };
+
+  const confirmBulkDeleteOrders = async () => {
+    if (!accessToken || selectedOrderIds.length === 0) return;
+    setBulkUpdating(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/orders/bulk-delete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ orderIds: selectedOrderIds }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        toast.success(data.message || `Deleted ${selectedOrderIds.length} orders`);
+        setSelectedOrderIds([]);
+        await fetchOrders();
+      } else {
+        toast.error(data.message || 'Failed to delete selected orders');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('Error performing bulk delete');
+    } finally {
+      setBulkUpdating(false);
+      setBulkDeleteModalOpen(false);
+    }
+  };
+
   const confirmDeleteOrder = async () => {
     if (!itemToDelete || !accessToken) return;
     try {
@@ -226,6 +323,7 @@ const OrdersList: React.FC = () => {
       });
       if (response.ok) {
         toast.success(`Order ${itemToDelete.name} deleted successfully`);
+        setSelectedOrderIds((prev) => prev.filter((id) => id !== itemToDelete.id));
         await fetchOrders();
       } else {
         const data = await response.json().catch(() => ({}));
@@ -462,10 +560,63 @@ const OrdersList: React.FC = () => {
             </button>
           </div>
 
+          {/* Bulk Action Bar */}
+          {selectedOrderIds.length > 0 && (
+            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-900 text-white rounded-2xl shadow-md border border-slate-800 transition-all duration-300">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex items-center justify-center px-3 py-1 text-xs font-bold bg-indigo-600 text-white rounded-xl border border-indigo-500">
+                  {selectedOrderIds.length} Order{selectedOrderIds.length > 1 ? 's' : ''} Selected
+                </span>
+                <button
+                  type="button"
+                  onClick={handleClearSelection}
+                  className="text-xs text-slate-300 hover:text-white underline underline-offset-2 transition-colors cursor-pointer font-medium"
+                >
+                  Clear Selection
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3">
+                {/* Bulk Status Select */}
+                <div className="w-48 text-left">
+                  <Select
+                    value=""
+                    placeholder="Change Status"
+                    disabled={bulkUpdating}
+                    onChange={(val) => handleBulkStatusChange(val)}
+                    hClass="h-9 px-3"
+                    buttonClassName="bg-slate-800 text-white border-slate-700 hover:bg-slate-750"
+                    options={[
+                      { value: 'Pending', label: 'Mark as Pending' },
+                      { value: 'Confirmed', label: 'Mark as Confirmed' },
+                      { value: 'Cancelled', label: 'Mark as Cancelled' },
+                    ]}
+                  />
+                </div>
+
+                {/* Bulk Delete Button */}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  disabled={bulkUpdating}
+                  onClick={() => setBulkDeleteModalOpen(true)}
+                  className="!bg-rose-600 hover:!bg-rose-700 text-white border-none h-9 px-3.5 rounded-xl font-semibold text-xs transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                >
+                  <Trash2 size={14} />
+                  <span>Delete Selected ({selectedOrderIds.length})</span>
+                </Button>
+              </div>
+            </div>
+          )}
+
           <DataTable
             columns={columns}
             data={orders}
             loading={loading}
+            selectable={true}
+            selectedKeys={selectedOrderIds}
+            onSelectAll={handleSelectAll}
+            onSelectRow={handleSelectRow}
             keyExtractor={(item: any) => item._id}
             onRowClick={(item: any) => navigate(`/admin/orders/${item._id}`)}
           />
@@ -486,7 +637,7 @@ const OrdersList: React.FC = () => {
         </Card>
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Delete Single Order Confirmation Modal */}
       {deleteModalOpen && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4 border border-gray-100">
@@ -518,6 +669,43 @@ const OrdersList: React.FC = () => {
                 onClick={confirmDeleteOrder}
               >
                 Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Orders Confirmation Modal */}
+      {bulkDeleteModalOpen && (
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4 border border-gray-100">
+            <div className="w-12 h-12 bg-rose-50 text-rose-600 rounded-full flex items-center justify-center mx-auto">
+              <Trash2 size={24} />
+            </div>
+
+            <div className="space-y-1">
+              <h3 className="text-lg font-bold text-gray-900">Delete Selected Orders</h3>
+              <p className="text-sm text-gray-500">
+                Are you sure you want to delete <span className="font-bold text-rose-600">{selectedOrderIds.length} selected order{selectedOrderIds.length > 1 ? 's' : ''}</span>? This action cannot be undone.
+              </p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="secondary"
+                className="flex-1"
+                disabled={bulkUpdating}
+                onClick={() => setBulkDeleteModalOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                disabled={bulkUpdating}
+                className="flex-1 !bg-rose-600 hover:!bg-rose-700 text-white border-transparent"
+                onClick={confirmBulkDeleteOrders}
+              >
+                {bulkUpdating ? 'Deleting...' : `Delete ${selectedOrderIds.length} Orders`}
               </Button>
             </div>
           </div>

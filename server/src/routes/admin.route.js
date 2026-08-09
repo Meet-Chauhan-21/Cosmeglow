@@ -101,6 +101,8 @@ router.delete('/categories/:id', productController.deleteCategory);
 
 // Order endpoints
 router.get('/orders', orderController.getAllOrders);
+router.put('/orders/bulk-status', orderController.bulkUpdateOrderStatus);
+router.post('/orders/bulk-delete', orderController.bulkDeleteOrders);
 router.get('/orders/:id', orderController.getOrderById);
 router.put('/orders/:id/status', orderController.updateOrderStatus);
 router.delete('/orders/:id', orderController.deleteOrder);
