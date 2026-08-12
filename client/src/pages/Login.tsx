@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../components/common/SEO';
 import { Mail, Lock, ArrowRight, Sparkles, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
@@ -180,10 +180,10 @@ export const Login: React.FC = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Login — TREEBORN Premium Skincare</title>
-        <meta name="description" content="Access your TREEBORN Skincare member dashboard for orders, rewards, and custom formulations." />
-      </Helmet>
+      <SEO
+        title="Account Login — TREEBORN Skincare"
+        description="Sign in to your TREEBORN Skincare account to track orders, manage preferences, and view exclusive botanical offers."
+      />
 
       <Navbar />
 

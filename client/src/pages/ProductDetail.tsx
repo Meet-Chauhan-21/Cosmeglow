@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import SEO from '../components/common/SEO';
+import SEO, { ensureAbsoluteUrl } from '../components/common/SEO';
 import { Star, Heart, ShoppingBag, Plus, Minus, Check, ArrowLeft, ShieldCheck, Sparkles, Truck, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import Navbar from '../components/layout/Navbar';
@@ -152,11 +152,15 @@ export const ProductDetail: React.FC = () => {
   const backupSimilar = products.filter((p) => p.id !== product.id).slice(0, 4);
   const displaySimilar = similarProducts.length > 0 ? similarProducts : backupSimilar;
 
+  const productImageUrl = ensureAbsoluteUrl(product.image);
+  const mediaImageUrls = mediaItems.map((item) => ensureAbsoluteUrl(item.url));
+  const productImages = mediaImageUrls.length > 0 ? mediaImageUrls : [productImageUrl];
+
   const productSchema = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name,
-    image: product.image,
+    image: productImages,
     description: product.description,
     sku: product.id,
     brand: {
@@ -165,7 +169,7 @@ export const ProductDetail: React.FC = () => {
     },
     offers: {
       '@type': 'Offer',
-      url: typeof window !== 'undefined' ? window.location.href : `https://treeborn.in/product/${product.id}`,
+      url: typeof window !== 'undefined' ? window.location.href : `https://www.treeborn.shop/product/${product.id}`,
       priceCurrency: 'INR',
       price: product.price,
       itemCondition: 'https://schema.org/NewCondition',
@@ -182,15 +186,40 @@ export const ProductDetail: React.FC = () => {
       : {})
   };
 
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://www.treeborn.shop'
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: product.category || 'Skincare',
+        item: `https://www.treeborn.shop/category/${(product.category || 'all').toLowerCase().replace(/\s+/g, '-')}`
+      },
+      {
+        '@type': 'ListItem',
+        position: 3,
+        name: product.name,
+        item: typeof window !== 'undefined' ? window.location.href : `https://www.treeborn.shop/product/${product.id}`
+      }
+    ]
+  };
+
   return (
     <>
       <SEO
-        title={`${product.name} — TREEBORN Botanical Skincare`}
-        description={`${product.description.slice(0, 150)}... Pure organic skincare by TREEBORN.`}
-        keywords={`treeborn ${product.name}, ${product.category || 'botanical skincare'}, buy ${product.name} online, organic skincare India`}
-        ogImage={product.image}
+        title={`${product.name} — Organic Botanical Skincare`}
+        description={product.description ? (product.description.length > 155 ? `${product.description.slice(0, 155)}...` : product.description) : `Buy ${product.name} online at TREEBORN Skincare.`}
+        keywords={`treeborn ${product.name}, ${product.category || 'botanical skincare'}, buy ${product.name} online, organic face serum, organic skincare India`}
+        ogImage={productImageUrl}
         ogType="product"
-        jsonLd={productSchema}
+        jsonLd={[productSchema, breadcrumbSchema]}
       />
 
       <Navbar />

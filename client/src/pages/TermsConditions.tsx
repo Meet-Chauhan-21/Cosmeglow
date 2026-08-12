@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../components/common/SEO';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import Container from '../components/layout/Container';
@@ -34,10 +34,10 @@ export const TermsConditions: React.FC = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Terms & Conditions — TREEBORN Skincare</title>
-        <meta name="description" content="Read our Terms & Conditions for ordering and botanical collection use." />
-      </Helmet>
+      <SEO
+        title="Terms & Conditions — TREEBORN Skincare"
+        description="Read the official Terms & Conditions for shopping online and using the TREEBORN Skincare website and services."
+      />
 
       <Navbar />
 

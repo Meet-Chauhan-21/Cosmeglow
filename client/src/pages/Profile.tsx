@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../components/common/SEO';
 import { User as UserIcon, ShoppingBag, MapPin, LogOut, Download, Mail, Phone, Plus, Trash2, Edit, CheckCircle, Shield, AlertTriangle, ChevronDown, ChevronUp } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import { useStore } from '../context/StoreContext';
@@ -504,10 +504,10 @@ export const Profile: React.FC = () => {
 
   return (
     <>
-      <Helmet>
-        <title>My Profile — TREEBORN Skincare</title>
-        <meta name="description" content="Manage your TREEBORN account details, shipping addresses, and review order history." />
-      </Helmet>
+      <SEO
+        title="My Profile — TREEBORN Skincare"
+        description="Manage your TREEBORN account details, shipping addresses, and review order history."
+      />
 
       <Navbar />
 

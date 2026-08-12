@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import SEO from '../components/common/SEO';
+import SEO, { ensureAbsoluteUrl } from '../components/common/SEO';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Star,
@@ -298,13 +298,35 @@ export const Category: React.FC = () => {
     );
   }
 
+  const categoryImageUrl = ensureAbsoluteUrl(activeCategory.image);
+
+  const categoryBreadcrumb = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      {
+        '@type': 'ListItem',
+        position: 1,
+        name: 'Home',
+        item: 'https://www.treeborn.shop'
+      },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: activeCategory.name,
+        item: typeof window !== 'undefined' ? window.location.href : `https://www.treeborn.shop/category/${activeCategory.slug}`
+      }
+    ]
+  };
+
   return (
     <>
       <SEO
-        title={`${activeCategory.name} — Curated Organic Skincare | TREEBORN`}
-        description={`Explore our range of luxury organic formulations specifically curated for ${activeCategory.name}. Experience biological cellular skin restoration with TREEBORN.`}
-        keywords={`treeborn ${activeCategory.name}, organic ${activeCategory.name}, botanical skincare, buy ${activeCategory.name} India`}
-        ogImage={activeCategory.image}
+        title={`${activeCategory.name} — Organic Botanical Skincare`}
+        description={(activeCategory as any).description || `Explore our range of luxury organic formulations specifically curated for ${activeCategory.name}. Experience biological cellular skin restoration with TREEBORN.`}
+        keywords={`treeborn ${activeCategory.name}, organic ${activeCategory.name}, botanical skincare India, buy ${activeCategory.name} online`}
+        ogImage={categoryImageUrl}
+        jsonLd={categoryBreadcrumb}
       />
 
       <Navbar />

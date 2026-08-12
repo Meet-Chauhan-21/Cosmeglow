@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../components/common/SEO';
 
 import { ArrowLeft, CreditCard, ShieldCheck, ShoppingBag, Truck } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
@@ -454,9 +454,10 @@ export const Checkout: React.FC = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Checkout — TREEBORN Premium Skincare</title>
-      </Helmet>
+      <SEO
+        title="Secure Checkout — TREEBORN Skincare"
+        description="Complete your order securely with TREEBORN Skincare. Fast shipping and 100% genuine organic botanical products."
+      />
 
       <Navbar />
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '../components/common/SEO';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import Container from '../components/layout/Container';
@@ -34,10 +34,10 @@ export const PrivacyPolicy: React.FC = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Privacy Policy — TREEBORN Skincare</title>
-        <meta name="description" content="Read our privacy policy regarding how we handle user data and information." />
-      </Helmet>
+      <SEO
+        title="Privacy Policy — TREEBORN Skincare"
+        description="Read the official TREEBORN Skincare Privacy Policy regarding how we process, protect, and respect your personal data and information."
+      />
 
       <Navbar />
 

@@ -1,8 +1,15 @@
 User-agent: *
 Allow: /
+Allow: /*.ico
+Allow: /*.png
+Allow: /*.svg
+Allow: /*.jpeg
+Allow: /*.jpg
+Allow: /public/
 Disallow: /admin
 Disallow: /admin/*
 Disallow: /checkout
 Disallow: /profile
 
 Sitemap: https://www.treeborn.shop/sitemap.xml
+
