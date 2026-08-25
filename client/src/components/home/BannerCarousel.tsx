@@ -32,7 +32,7 @@ export const BannerCarousel: React.FC = () => {
             transition={{ duration: 0.4, ease: 'easeInOut' }}
             className="w-full h-full object-cover select-none"
             onError={(e) => {
-              (e.target as any).src = 'https://placehold.co/1200x400?text=TreeBorn+Skincare+Promo+Banner';
+              (e.target as any).src = 'https://placehold.co/1200x400?text=CosmeGlow+Skincare+Promo+Banner';
             }}
           />
         </AnimatePresence>

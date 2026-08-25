@@ -55,7 +55,7 @@ export const AdminDashboard: React.FC = () => {
 
         <div className="space-y-2">
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Welcome, Admin!</h1>
-          <p className="text-sm text-gray-500 font-medium">TreeBorn Administration Dashboard</p>
+          <p className="text-sm text-gray-500 font-medium">CosmeGlow Administration Dashboard</p>
         </div>
 
         <div className="bg-gray-50 rounded-2xl p-4 border border-gray-200/60 text-left space-y-2.5 text-xs text-gray-650">

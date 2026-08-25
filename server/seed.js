@@ -20,9 +20,9 @@ const seedDatabase = async () => {
     // Admin Details
     // ============================
     const adminData = {
-      name: "TreeBorn Admin",
-      email: "admin@treeborn.com", // Change this to create another admin
-      password: "treeborn@123",    // Change this to update password
+      name: "CosmeGlow Admin",
+      email: "admin@cosmeglow.com", // Change this to create another admin
+      password: "cosmeglow@123",    // Change this to update password
       phone: "+919999999999",
       role: "admin",
       isVerified: true,

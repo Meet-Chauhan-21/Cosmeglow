@@ -165,7 +165,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const sessionUser = data.user;
 
       setUser(sessionUser);
-      toast.success(`Account created successfully! Welcome to TreeBorn, ${name}.`);
+      toast.success(`Account created successfully! Welcome to CosmeGlow, ${name}.`);
       setLoading(false);
       return true;
     } catch (error) {

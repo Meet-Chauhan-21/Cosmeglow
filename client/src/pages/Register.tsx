@@ -138,8 +138,8 @@ export const Register: React.FC = () => {
   return (
     <>
       <SEO
-        title="Create Account — TREEBORN Skincare"
-        description="Join TREEBORN Skincare to enjoy personalized skincare recommendations, track your orders, and receive exclusive botanical skincare offers."
+        title="Create Account — CosmeGlow Skincare"
+        description="Join CosmeGlow Skincare to enjoy personalized skincare recommendations, track your orders, and receive exclusive botanical skincare offers."
       />
 
       <Navbar />

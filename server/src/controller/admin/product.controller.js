@@ -274,9 +274,11 @@ const uploadImage = async (req, res) => {
       return res.status(400).json({ message: 'No file uploaded' });
     }
 
+    const folder = req.body.folder || 'CosmeGlow/products';
+
     const uploadStream = cloudinary.uploader.upload_stream(
       { 
-        folder: 'TreeBorn/products',
+        folder: folder,
         resource_type: 'auto'
       },
       (error, result) => {
@@ -309,7 +311,7 @@ const uploadVideo = async (req, res) => {
 
     const uploadStream = cloudinary.uploader.upload_stream(
       { 
-        folder: 'TreeBorn/videos',
+        folder: 'CosmeGlow/videos',
         resource_type: 'video'
       },
       (error, result) => {

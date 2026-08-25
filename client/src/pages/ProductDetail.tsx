@@ -165,11 +165,11 @@ export const ProductDetail: React.FC = () => {
     sku: product.id,
     brand: {
       '@type': 'Brand',
-      name: 'TREEBORN'
+      name: 'CosmeGlow'
     },
     offers: {
       '@type': 'Offer',
-      url: typeof window !== 'undefined' ? window.location.href : `https://www.treeborn.shop/product/${product.id}`,
+      url: typeof window !== 'undefined' ? window.location.href : `https://www.cosmeglow.com/product/${product.id}`,
       priceCurrency: 'INR',
       price: product.price,
       itemCondition: 'https://schema.org/NewCondition',
@@ -194,19 +194,19 @@ export const ProductDetail: React.FC = () => {
         '@type': 'ListItem',
         position: 1,
         name: 'Home',
-        item: 'https://www.treeborn.shop'
+        item: 'https://www.cosmeglow.com'
       },
       {
         '@type': 'ListItem',
         position: 2,
         name: product.category || 'Skincare',
-        item: `https://www.treeborn.shop/category/${(product.category || 'all').toLowerCase().replace(/\s+/g, '-')}`
+        item: `https://www.cosmeglow.com/category/${(product.category || 'all').toLowerCase().replace(/\s+/g, '-')}`
       },
       {
         '@type': 'ListItem',
         position: 3,
         name: product.name,
-        item: typeof window !== 'undefined' ? window.location.href : `https://www.treeborn.shop/product/${product.id}`
+        item: typeof window !== 'undefined' ? window.location.href : `https://www.cosmeglow.com/product/${product.id}`
       }
     ]
   };
@@ -215,8 +215,8 @@ export const ProductDetail: React.FC = () => {
     <>
       <SEO
         title={`${product.name} — Organic Botanical Skincare`}
-        description={product.description ? (product.description.length > 155 ? `${product.description.slice(0, 155)}...` : product.description) : `Buy ${product.name} online at TREEBORN Skincare.`}
-        keywords={`treeborn ${product.name}, ${product.category || 'botanical skincare'}, buy ${product.name} online, organic face serum, organic skincare India`}
+        description={product.description ? (product.description.length > 155 ? `${product.description.slice(0, 155)}...` : product.description) : `Buy ${product.name} online at CosmeGlow Skincare.`}
+        keywords={`cosmeglow ${product.name}, ${product.category || 'botanical skincare'}, buy ${product.name} online, organic face serum, organic skincare India`}
         ogImage={productImageUrl}
         ogType="product"
         jsonLd={[productSchema, breadcrumbSchema]}
@@ -605,21 +605,32 @@ export const ProductDetail: React.FC = () => {
 
                       {/* Quick Add Overlay */}
                       <div className="absolute inset-x-0 bottom-4 px-4 translate-y-6 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 z-10">
-                        <Button
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            addToCart(item, 1, item.volume || '50ml');
-                            setIsCartOpen(true);
-                            toast.success(`${item.name} added to bag.`);
-                          }}
-                          variant="primary"
-                          size="sm"
-                          className="w-full shadow-lg"
-                          leftIcon={<ShoppingBag size={14} />}
-                        >
-                          Add to Bag
-                        </Button>
+                        {item.stock !== undefined && item.stock <= 0 ? (
+                          <button
+                            type="button"
+                            disabled
+                            className="w-full bg-slate-200 text-slate-500 border border-slate-300 py-2 px-3 rounded-full text-xs font-semibold uppercase tracking-wider cursor-not-allowed select-none shadow-sm flex items-center justify-center gap-1.5"
+                          >
+                            <ShoppingBag size={14} className="opacity-50" />
+                            <span>Out of Stock</span>
+                          </button>
+                        ) : (
+                          <Button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              addToCart(item, 1, item.volume || '50ml');
+                              setIsCartOpen(true);
+                              toast.success(`${item.name} added to bag.`);
+                            }}
+                            variant="primary"
+                            size="sm"
+                            className="w-full shadow-lg"
+                            leftIcon={<ShoppingBag size={14} />}
+                          >
+                            Add to Bag
+                          </Button>
+                        )}
                       </div>
                     </div>
 

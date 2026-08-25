@@ -10,10 +10,10 @@ const getAllOrders = async (req, res) => {
   try {
     const page = Math.max(parseInt(req.query.page || '1', 10), 1);
     let limit = parseInt(req.query.limit || '50', 10);
-    if (req.query.all === 'true' || limit > 1000) {
-      limit = 2000;
+    if (req.query.all === 'true' || limit >= 2000) {
+      limit = Math.min(Math.max(limit, 1), 10000);
     } else {
-      limit = Math.min(Math.max(limit, 1), 500);
+      limit = Math.min(Math.max(limit, 1), 5000);
     }
     const skip = (page - 1) * limit;
     const search = (req.query.search || '').trim();

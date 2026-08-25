@@ -129,14 +129,24 @@ export const Hero: React.FC = () => {
 
                 {/* CTAs */}
                 <div className="flex flex-wrap items-center gap-4">
-                  <Button
-                    onClick={handleQuickAdd}
-                    variant="primary"
-                    size="lg"
-                    rightIcon={<ArrowRight size={18} />}
-                  >
-                    Quick Add to Bag
-                  </Button>
+                  {activeSlide.product.stock !== undefined && activeSlide.product.stock <= 0 ? (
+                    <button
+                      type="button"
+                      disabled
+                      className="bg-slate-200 text-slate-500 border border-slate-300 py-3.5 px-7 rounded-full font-semibold text-sm cursor-not-allowed select-none shadow-sm flex items-center gap-2"
+                    >
+                      <span>Out of Stock</span>
+                    </button>
+                  ) : (
+                    <Button
+                      onClick={handleQuickAdd}
+                      variant="primary"
+                      size="lg"
+                      rightIcon={<ArrowRight size={18} />}
+                    >
+                      Quick Add to Bag
+                    </Button>
+                  )}
                   <Button
                     href={`/product/${activeSlide.product.id}`}
                     variant="outline"

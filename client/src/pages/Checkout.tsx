@@ -35,7 +35,7 @@ const formatWhatsAppMessage = (
   const emojiSeedling = '\uD83C\uDF31';
 
   let message = `━━━━━━━━━━━━━━━━━━━━━\n`;
-  message += `${emojiHerb} *TREEBORN - NEW ORDER* ${emojiHerb}\n`;
+  message += `${emojiHerb} *COSMEGLOW - NEW ORDER* ${emojiHerb}\n`;
   message += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
   
   message += `${emojiPackage} *Order Details:*\n`;
@@ -60,7 +60,7 @@ const formatWhatsAppMessage = (
   message += `${emojiIndia} ${shippingAddress.country} - ${shippingAddress.zip}\n\n`;
   
   message += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  message += `Thank you for choosing TreeBorn! ${emojiSeedling}\n`;
+  message += `Thank you for choosing CosmeGlow! ${emojiSeedling}\n`;
   message += `━━━━━━━━━━━━━━━━━━━━━`;
   
   return encodeURIComponent(message);
@@ -358,7 +358,7 @@ export const Checkout: React.FC = () => {
           key: razorpayKeyId,
           amount: data.amount,
           currency: data.currency || 'INR',
-          name: settings.shopName || 'TREEBORN Skincare',
+          name: settings.shopName || 'CosmeGlow Skincare',
           description: 'Botanical Skincare Order Payment',
           image: settings.logo || 'https://images.unsplash.com/photo-1617897903246-719242758050?q=80&w=200&auto=format&fit=crop',
           order_id: data.razorpayOrderId,
@@ -455,8 +455,8 @@ export const Checkout: React.FC = () => {
   return (
     <>
       <SEO
-        title="Secure Checkout — TREEBORN Skincare"
-        description="Complete your order securely with TREEBORN Skincare. Fast shipping and 100% genuine organic botanical products."
+        title="Secure Checkout — CosmeGlow Skincare"
+        description="Complete your order securely with CosmeGlow Skincare. Fast shipping and 100% genuine organic botanical products."
       />
 
       <Navbar />

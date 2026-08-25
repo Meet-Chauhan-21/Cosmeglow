@@ -8,7 +8,7 @@ import {
   Users,
   Settings,
   PanelLeftClose,
-  TreeDeciduous,
+  Sparkles,
   FileText,
   Folder,
   Image,
@@ -182,21 +182,21 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl overflow-hidden border border-slate-700/40 bg-[#161D30] flex items-center justify-center p-1 shadow-sm flex-shrink-0">
                 {logoUrl ? (
-                  <img src={logoUrl} alt="TreeBorn Logo" className="w-full h-full object-contain" />
+                  <img src={logoUrl} alt="CosmeGlow Logo" className="w-full h-full object-contain" />
                 ) : (
-                  <TreeDeciduous size={18} className="text-emerald-450" />
+                  <Sparkles size={18} className="text-amber-400" />
                 )}
               </div>
-              <span className="text-base font-black font-display text-white tracking-tight">TreeBorn</span>
+              <span className="text-base font-black font-display text-white tracking-tight">CosmeGlow</span>
             </div>
           )}
           {collapsed && (
             <div className="flex-1 flex justify-center">
               <div className="w-10 h-10 rounded-xl overflow-hidden border border-slate-700/40 bg-[#161D30] flex items-center justify-center p-1 shadow-sm">
                 {logoUrl ? (
-                  <img src={logoUrl} alt="TreeBorn Logo" className="w-full h-full object-contain" />
+                  <img src={logoUrl} alt="CosmeGlow Logo" className="w-full h-full object-contain" />
                 ) : (
-                  <TreeDeciduous size={18} className="text-emerald-450" />
+                  <Sparkles size={18} className="text-amber-400" />
                 )}
               </div>
             </div>

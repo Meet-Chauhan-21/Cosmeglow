@@ -100,7 +100,7 @@ const OrderView: React.FC = () => {
           doc.setFont('helvetica', 'bold');
           doc.setFontSize(22);
           doc.setTextColor(rgb.r, rgb.g, rgb.b);
-          doc.text(settings?.shopName || 'TREEBORN', 29, 20);
+          doc.text(settings?.shopName || 'CosmeGlow', 29, 20);
           
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(9);
@@ -110,7 +110,7 @@ const OrderView: React.FC = () => {
           doc.setFont('helvetica', 'bold');
           doc.setFontSize(22);
           doc.setTextColor(rgb.r, rgb.g, rgb.b);
-          doc.text(settings?.shopName || 'TREEBORN', 14, 20);
+          doc.text(settings?.shopName || 'CosmeGlow', 14, 20);
           
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(9);
@@ -135,9 +135,9 @@ const OrderView: React.FC = () => {
         const addressText = `Address: ${settings?.address || 'India'}`;
         const splitAddress = doc.splitTextToSize(addressText, 95);
 
-        doc.text(`Shop: ${settings?.shopName || 'TREEBORN Skincare'}`, 14, 44);
+        doc.text(`Shop: ${settings?.shopName || 'CosmeGlow Skincare'}`, 14, 44);
         doc.text(`GST: ${settings?.gstNumber || '24AAAAA0000A1Z5'}`, 14, 49);
-        doc.text(`Email: ${settings?.email || 'support@treeborn.com'}`, 14, 54);
+        doc.text(`Email: ${settings?.email || 'support@cosmeglow.com'}`, 14, 54);
         doc.text(splitAddress, 14, 59);
         
         doc.setFont('helvetica', 'bold');
@@ -229,7 +229,7 @@ const OrderView: React.FC = () => {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
         doc.setTextColor(rgb.r, rgb.g, rgb.b);
-        doc.text('Thank you for choosing Tree Born!', 14, summaryY + 45);
+        doc.text('Thank you for choosing CosmeGlow!', 14, summaryY + 45);
         
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);

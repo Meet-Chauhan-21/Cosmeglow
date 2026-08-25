@@ -40,6 +40,7 @@ export const BestSeller: React.FC = () => {
     category: activeBestseller?.category || 'Skincare',
     rating: activeBestseller?.rating || 4.9,
     reviewsCount: activeBestseller?.reviewsCount || 148,
+    stock: activeBestseller?.stock,
   };
 
   const handleAddToCart = () => {
@@ -191,14 +192,25 @@ export const BestSeller: React.FC = () => {
                 </div>
               </div>
               
-              <Button
-                onClick={handleAddToCart}
-                variant="primary"
-                size="md"
-                leftIcon={<ShoppingBag size={16} />}
-              >
-                Add to Bag
-              </Button>
+              {bestseller.stock !== undefined && bestseller.stock <= 0 ? (
+                <button
+                  type="button"
+                  disabled
+                  className="bg-slate-200 text-slate-500 border border-slate-300 py-3.5 px-6 rounded-full text-xs font-bold uppercase tracking-wider cursor-not-allowed select-none shadow-sm flex items-center gap-2"
+                >
+                  <ShoppingBag size={16} className="opacity-50" />
+                  <span>Out of Stock</span>
+                </button>
+              ) : (
+                <Button
+                  onClick={handleAddToCart}
+                  variant="primary"
+                  size="md"
+                  leftIcon={<ShoppingBag size={16} />}
+                >
+                  Add to Bag
+                </Button>
+              )}
             </motion.div>
 
           </div>
@@ -210,38 +222,38 @@ export const BestSeller: React.FC = () => {
       <div className="w-full overflow-hidden bg-primary py-4.5 mt-16 mb-6 rotate-[1.5deg] scale-[1.05] border-y border-secondary/35 shadow-xl select-none relative z-10">
         <div className="flex whitespace-nowrap overflow-hidden">
           <div className="animate-marquee flex gap-16 text-white font-display font-medium text-xs sm:text-sm tracking-widest uppercase items-center">
-            <span className="font-bold text-accent-sage">Tree Born</span>
+            <span className="font-bold text-accent-sage">CosmeGlow</span>
             <span>•</span>
             <span>Biological Cellular Restoration</span>
             <span>•</span>
-            <span className="font-bold text-accent-sage">Tree Born</span>
+            <span className="font-bold text-accent-sage">CosmeGlow</span>
             <span>•</span>
             <span>100% Organic Active Botanicals</span>
             <span>•</span>
-            <span className="font-bold text-accent-sage">Tree Born</span>
+            <span className="font-bold text-accent-sage">CosmeGlow</span>
             <span>•</span>
             <span>Cruelty-Free & Dermatologist Approved</span>
             <span>•</span>
-            <span className="font-bold text-accent-sage">Tree Born</span>
+            <span className="font-bold text-accent-sage">CosmeGlow</span>
             <span>•</span>
             <span>Handcrafted Luxury Apothecary</span>
             <span>•</span>
           </div>
           {/* Duplicate for infinite loop alignment */}
           <div className="animate-marquee flex gap-16 text-white font-display font-medium text-xs sm:text-sm tracking-widest uppercase items-center" aria-hidden="true">
-            <span className="font-bold text-accent-sage">Tree Born</span>
+            <span className="font-bold text-accent-sage">CosmeGlow</span>
             <span>•</span>
             <span>Biological Cellular Restoration</span>
             <span>•</span>
-            <span className="font-bold text-accent-sage">Tree Born</span>
+            <span className="font-bold text-accent-sage">CosmeGlow</span>
             <span>•</span>
             <span>100% Organic Active Botanicals</span>
             <span>•</span>
-            <span className="font-bold text-accent-sage">Tree Born</span>
+            <span className="font-bold text-accent-sage">CosmeGlow</span>
             <span>•</span>
             <span>Cruelty-Free & Dermatologist Approved</span>
             <span>•</span>
-            <span className="font-bold text-accent-sage">Tree Born</span>
+            <span className="font-bold text-accent-sage">CosmeGlow</span>
             <span>•</span>
             <span>Handcrafted Luxury Apothecary</span>
             <span>•</span>

@@ -3,7 +3,7 @@ const Order = require('../models/order.model');
 const Settings = require('../models/settings.model');
 const { sendOrderConfirmationEmail, sendAdminNewOrderEmail } = require('../util/email.util');
 
-const ORDER_NUMBER_PREFIX = 'TREEBORN';
+const ORDER_NUMBER_PREFIX = 'COSMEGLOW';
 
 const generateOrderNumber = async () => {
   // Retry a few times to avoid collisions.
@@ -58,7 +58,7 @@ const createRazorpayOrder = async (req, res) => {
         amount: amountInPaise,
         currency: 'INR',
         receipt,
-        notes: { store: 'TreeBorn Skincare' }
+        notes: { store: 'CosmeGlow Skincare' }
       })
     });
 

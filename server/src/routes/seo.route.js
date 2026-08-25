@@ -7,7 +7,7 @@ const Category = require('../models/category.model');
 // @route   GET /sitemap.xml
 router.get('/sitemap.xml', async (req, res) => {
   try {
-    const clientUrl = process.env.CLIENT_URL || 'https://treeborn.shop';
+    const clientUrl = process.env.CLIENT_URL || 'https://www.cosmeglow.com';
     const currentDate = new Date().toISOString();
 
     const [products, categories] = await Promise.all([
@@ -72,7 +72,7 @@ router.get('/sitemap.xml', async (req, res) => {
 // @desc    Serve dynamic robots.txt
 // @route   GET /robots.txt
 router.get('/robots.txt', (req, res) => {
-  const clientUrl = process.env.CLIENT_URL || 'https://treeborn.shop';
+  const clientUrl = process.env.CLIENT_URL || 'https://www.cosmeglow.com';
   const robots = `User-agent: *
 Allow: /
 Disallow: /admin

@@ -93,7 +93,7 @@ export const Footer: React.FC = () => {
               to="/"
               className="font-display text-2xl font-bold tracking-widest text-white flex items-center gap-1.5 mb-5 focus:outline-none"
             >
-              <span>TREE BORN</span>
+              <span>COSME GLOW</span>
               <span className="h-1.5 w-1.5 rounded-full bg-secondary"></span>
             </Link>
             <p className="text-white/60 text-sm font-sans max-w-sm mb-6 leading-relaxed">
@@ -101,7 +101,7 @@ export const Footer: React.FC = () => {
             </p>
             <div className="flex items-center space-x-4 mb-6">
               <a
-                href="https://www.instagram.com/tree_bornshop"
+                href="https://www.instagram.com/cosmeglowskincare"
                 target="_blank"
                 rel="noreferrer"
                 className="text-white/60 hover:text-white transition-colors"
@@ -128,11 +128,11 @@ export const Footer: React.FC = () => {
 
             {/* Enlarge logo and position below social icons */}
             <div className="mb-4 select-none">
-              <img src={logoImg} alt="Tree Born Logo" className="h-24 w-auto object-contain opacity-90" />
+              <img src={settings.logo || logoImg} alt="CosmeGlow Logo" className="h-24 w-auto object-contain opacity-90" />
             </div>
 
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-semibold text-white/50 font-sans">
-              <span className="text-[10px] font-display font-semibold tracking-widest text-white/30 uppercase">Tree Born</span>
+              <span className="text-[10px] font-display font-semibold tracking-widest text-white/30 uppercase">CosmeGlow</span>
               <span className="text-white/20 select-none">|</span>
               <Link to="/terms-conditions" className="hover:text-white transition-colors">
                 Terms & Conditions
@@ -209,7 +209,7 @@ export const Footer: React.FC = () => {
         {/* Divider & Centered Copyright and Developer block */}
         <div className="border-t border-white/10 pt-6 flex flex-col items-center justify-center gap-2 text-center text-sm font-medium text-white/50 font-sans">
           <p>
-            &copy; {currentYear} TREEBORN Skincare. All rights reserved. Designed for pure restoration.
+            &copy; {currentYear} CosmeGlow Skincare. All rights reserved. Designed for pure restoration.
           </p>
           <p className="text-white/40 text-xs">
             Developed by{' '}

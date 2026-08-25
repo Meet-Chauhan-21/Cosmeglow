@@ -40,7 +40,7 @@ export const WhyChooseUs: React.FC = () => {
                 className="text-xs font-bold font-display uppercase tracking-widest px-3 py-1 rounded-full inline-block text-white transition-all duration-300 shadow-2xs"
                 style={{ backgroundColor: themeColor }}
               >
-                About Tree Born
+                About CosmeGlow
               </span>
               <h2 className="text-3xl sm:text-4xl font-display font-bold text-dark tracking-tight leading-tight">
                 Crafting Skincare In Harmony With Nature's Intellect
@@ -54,7 +54,7 @@ export const WhyChooseUs: React.FC = () => {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-gray-600 font-sans text-sm sm:text-base leading-relaxed"
             >
-              At Tree Born, we believe that true skin rejuvenation is an act of raw restoration. Our laboratory processes extracts from wild-harvested trees, organic flora, and active cellular compounds to stimulate biological renewal without synthetic fillers or chemical shortcuts.
+              At CosmeGlow, we believe that true skin rejuvenation is an act of raw restoration. Our laboratory processes extracts from wild-harvested trees, organic flora, and active cellular compounds to stimulate biological renewal without synthetic fillers or chemical shortcuts.
             </motion.p>
 
             <motion.p

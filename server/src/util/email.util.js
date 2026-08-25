@@ -79,11 +79,11 @@ const sendEmail = async ({ to, subject, html }) => {
     const fromEmail = process.env.EMAIL_FROM || 'dabhisanjay901@gmail.com';
     
     // Parse sender name and email from "Name <email>" format
-    let senderName = 'TreeBorn Skincare';
+    let senderName = 'CosmeGlow Skincare';
     let senderEmail = 'dabhisanjay901@gmail.com';
     const match = fromEmail.match(/^(?:"?([^"]*)"?\s)?(?:<(.+)>)$/);
     if (match) {
-      senderName = match[1] || 'TreeBorn Skincare';
+      senderName = match[1] || 'CosmeGlow Skincare';
       senderEmail = match[2];
     }
 
@@ -113,7 +113,7 @@ const sendEmail = async ({ to, subject, html }) => {
   // Option 2: Standard Nodemailer (SMTP/Gmail)
   const transporter = createTransporter();
   if (transporter) {
-    const fromEmail = process.env.EMAIL_FROM || `"TreeBorn Skincare" <${process.env.SMTP_USER}>`;
+    const fromEmail = process.env.EMAIL_FROM || `"CosmeGlow Skincare" <${process.env.SMTP_USER}>`;
     const email_info = await transporter.sendMail({
       from: fromEmail,
       to: to,
@@ -139,7 +139,7 @@ const sendVerificationEmail = async (email, name, token) => {
   console.log("Recipient:", email);
 
   try {
-    const sent = await sendEmail({ to: email, subject: 'Verify Your Email Address — TREEBORN', html: htmlContent });
+    const sent = await sendEmail({ to: email, subject: 'Verify Your Email Address — COSMEGLOW', html: htmlContent });
     if (!sent) {
       // Development fallback logs
       console.log('\n==================================================');
@@ -196,7 +196,7 @@ const sendOrderConfirmationEmail = async (order, userEmail) => {
   );
 
   try {
-    const sent = await sendEmail({ to: userEmail, subject: `Order Confirmation #${order.orderNumber} — TREEBORN`, html: htmlContent });
+    const sent = await sendEmail({ to: userEmail, subject: `Order Confirmation #${order.orderNumber} — COSMEGLOW`, html: htmlContent });
     if (!sent) {
       console.log('\n==================================================');
       console.log('🌿 [MOCK EMAIL] Customer Order Confirmation Email');
@@ -274,7 +274,7 @@ const sendPasswordResetEmail = async (email, name, token) => {
   console.log("Recipient:", email);
 
   try {
-    const sent = await sendEmail({ to: email, subject: 'Reset Your Password — TREEBORN', html: htmlContent });
+    const sent = await sendEmail({ to: email, subject: 'Reset Your Password — COSMEGLOW', html: htmlContent });
     if (!sent) {
       console.log('\n==================================================');
       console.log('🔑 [MOCK EMAIL] Password Reset Email Sent');

@@ -64,9 +64,9 @@ export const Newsletter: React.FC = () => {
         const emojiBubble = '\uD83D\uDCAC';
 
         let textMsg = `━━━━━━━━━━━━━━━━━━━━━\n`;
-        textMsg += `${emojiHerb} *TREEBORN - CONTACT INQUIRY* ${emojiHerb}\n`;
+        textMsg += `${emojiHerb} *COSMEGLOW - CONTACT INQUIRY* ${emojiHerb}\n`;
         textMsg += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
-        textMsg += `Hello TreeBorn Team, I would like to get in touch with you regarding your products/formulations. Here are my details:\n\n`;
+        textMsg += `Hello CosmeGlow Team, I would like to get in touch with you regarding your products/formulations. Here are my details:\n\n`;
         textMsg += `${emojiUser} *Name:* ${values.name}\n`;
         textMsg += `${emojiMail} *Email:* ${values.email}\n\n`;
         textMsg += `${emojiBubble} *Message:*\n"${values.message}"\n\n`;
@@ -117,7 +117,7 @@ export const Newsletter: React.FC = () => {
                 Get In Touch
               </span>
               <h2 className="text-3xl sm:text-4xl font-display font-bold text-slate-900 tracking-tight leading-tight">
-                Connect with TreeBorn
+                Connect with CosmeGlow
               </h2>
               <p className="text-slate-500 text-sm sm:text-base mt-4 leading-relaxed">
                 Have questions about our low-temperature molecular bio-fractionation or 100% zero-waste packaging? Reach out to our botanical skincare specialists.

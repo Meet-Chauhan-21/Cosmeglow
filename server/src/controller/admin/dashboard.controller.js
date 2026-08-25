@@ -106,6 +106,9 @@ const getSettings = async (req, res) => {
     let settings = await Settings.findOne();
     if (!settings) {
       settings = await Settings.create({});
+    } else if (!settings.shopName || /treeborn/i.test(settings.shopName)) {
+      settings.shopName = 'CosmeGlow Skincare';
+      await settings.save();
     }
     return res.status(200).json({ settings });
   } catch (error) {
@@ -454,7 +457,7 @@ const getApiMetrics = async (req, res) => {
 
         mongodbMetrics = {
           status: states[state],
-          dbName: mongoose.connection.name || 'treeborn',
+          dbName: mongoose.connection.name || 'cosmeglow',
           host: mongoose.connection.host || 'cluster0.m6kc5u4.mongodb.net',
           collectionsCount: stats.collections || 0,
           totalSize: `${sizeInMb} MB`,
@@ -474,7 +477,7 @@ const getApiMetrics = async (req, res) => {
         const orderCount = await Order.countDocuments();
         mongodbMetrics = {
           status: 'Connected',
-          dbName: mongoose.connection.name || 'treeborn',
+          dbName: mongoose.connection.name || 'cosmeglow',
           host: mongoose.connection.host || 'cluster0.m6kc5u4.mongodb.net',
           collectionsCount: 12,
           totalSize: '2.40 MB',
@@ -521,7 +524,7 @@ const sendTestEmailAdmin = async (req, res) => {
     }
 
     const { sendVerificationEmail } = require('../../util/email.util');
-    await sendVerificationEmail(email, 'TreeBorn Administrator', 'TEST_TOKEN_12345');
+    await sendVerificationEmail(email, 'CosmeGlow Administrator', 'TEST_TOKEN_12345');
 
     return res.status(200).json({
       message: `Test email dispatched successfully to ${email}!`

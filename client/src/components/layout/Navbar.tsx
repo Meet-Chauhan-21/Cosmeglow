@@ -198,7 +198,7 @@ export const Navbar: React.FC = () => {
             }`}>
               <img 
                 src={logoImg} 
-                alt="Tree Born logo" 
+                alt="CosmeGlow logo" 
                 className={`transition-all duration-500 object-contain ${
                   isScrolled ? 'h-8 w-auto mt-0.5' : 'h-11 w-auto mt-1.5'
                 }`} 
@@ -206,7 +206,7 @@ export const Navbar: React.FC = () => {
               <span className={`text-primary transition-all duration-500 font-bold tracking-normal ${
                 isScrolled ? 'text-sm' : 'text-sm sm:text-base'
               }`}>
-                Tree Born
+                CosmeGlow
               </span>
             </div>
           </Link>
@@ -347,8 +347,8 @@ export const Navbar: React.FC = () => {
             >
               <div className="flex items-center justify-between border-b border-border-gray pb-4 mb-6">
                 <span className="font-display text-xl font-bold tracking-widest text-primary flex items-center gap-1.5">
-                  <img src={logoImg} alt="TREEBORN logo" className="h-6 w-auto object-contain" />
-                  <span>TREEBORN</span>
+                  <img src={logoImg} alt="CosmeGlow logo" className="h-6 w-auto object-contain" />
+                  <span>CosmeGlow</span>
                 </span>
                 <button
                   onClick={() => setIsMobileMenuOpen(false)}

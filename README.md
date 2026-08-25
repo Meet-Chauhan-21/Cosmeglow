@@ -1,6 +1,6 @@
-# TreeBorn 🌿 — Premium E-Commerce & Skincare Management System
+# CosmeGlow 🌿 — Premium E-Commerce & Skincare Management System
 
-TreeBorn is a high-performance, premium E-Commerce platform tailored for botanical and restorative skincare. The system features a responsive storefront client, a comprehensive admin dashboard, a secure backend REST API, and native integrations with logistics, marketing, and media services.
+CosmeGlow is a high-performance, premium E-Commerce platform tailored for botanical and restorative skincare. The system features a responsive storefront client, a comprehensive admin dashboard, a secure backend REST API, and native integrations with logistics, marketing, and media services.
 
 ---
 

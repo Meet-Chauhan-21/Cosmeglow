@@ -10,7 +10,7 @@ export const WhatsAppButton: React.FC = () => {
 
   // Determine message based on current page path
   const emojiHerb = '\uD83C\uDF3F';
-  let message = `Hello TreeBorn, I am interested in your products. Could you please assist me with my inquiry? Thank you! ${emojiHerb}`;
+  let message = `Hello CosmeGlow, I am interested in your products. Could you please assist me with my inquiry? Thank you! ${emojiHerb}`;
 
   if (path.startsWith('/product/')) {
     const productId = path.split('/product/')[1];
@@ -52,7 +52,7 @@ export const WhatsAppButton: React.FC = () => {
 
       {/* Slide-out tooltip helper on hover (slides out to the left) */}
       <span className="absolute right-full mr-3 bg-white text-dark border border-border-gray/80 px-3 py-1.5 rounded-lg text-xs font-semibold font-display shadow-lg opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-300 whitespace-nowrap">
-        Chat with TREEBORN
+        Chat with CosmeGlow
       </span>
     </motion.a>
   );

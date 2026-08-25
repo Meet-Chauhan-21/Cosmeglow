@@ -7,7 +7,7 @@ const Order = require('../../models/order.model');
 const getAllUsers = async (req, res) => {
   try {
     const page = Math.max(parseInt(req.query.page || '1', 10), 1);
-    const limit = Math.min(Math.max(parseInt(req.query.limit || '50', 10), 1), 100);
+    const limit = Math.min(Math.max(parseInt(req.query.limit || '50', 10), 1), 10000);
     const skip = (page - 1) * limit;
     const search = req.query.search || '';
 
@@ -122,9 +122,36 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// @desc    Bulk delete users
+// @route   POST /api/admin/users/bulk-delete
+// @access  Private/Admin
+const bulkDeleteUsers = async (req, res) => {
+  try {
+    const { userIds } = req.body;
+    if (!Array.isArray(userIds) || userIds.length === 0) {
+      return res.status(400).json({ message: 'No users selected.' });
+    }
+
+    // Exclude any admin users from bulk deletion
+    const result = await User.deleteMany({
+      _id: { $in: userIds },
+      role: { $ne: 'admin' }
+    });
+
+    return res.status(200).json({
+      message: `Successfully deleted ${result.deletedCount} user(s).`,
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    console.error('Bulk Delete Users Error:', error);
+    return res.status(500).json({ message: 'Server error. Failed to delete users.' });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
   updateUser,
-  deleteUser
+  deleteUser,
+  bulkDeleteUsers
 };

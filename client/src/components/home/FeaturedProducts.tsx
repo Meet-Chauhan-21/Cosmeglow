@@ -101,8 +101,13 @@ export const FeaturedProducts: React.FC = () => {
                   {/* Image Frame */}
                   <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-light-gray mb-4 border border-border-gray/30">
                     
-                    {/* Discount/New Badges */}
+                    {/* Discount/New/Stock Badges */}
                     <div className="absolute top-3 left-3 z-10 flex flex-col gap-1.5 animate-fade-in-up">
+                      {product.stock !== undefined && product.stock <= 0 && (
+                        <span className="bg-rose-600 text-white text-[10px] font-display font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
+                          Out of Stock
+                        </span>
+                      )}
                       {product.discount && (
                         <span className="bg-primary text-white text-[10px] font-display font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider shadow-sm">
                           -{product.discount}%
@@ -148,15 +153,26 @@ export const FeaturedProducts: React.FC = () => {
 
                     {/* Quick Add Overlay */}
                     <div className="absolute inset-x-0 bottom-4 px-4 translate-y-6 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 z-10">
-                      <Button
-                        onClick={(e) => handleAddToCart(e, product)}
-                        variant="primary"
-                        size="sm"
-                        className="w-full shadow-lg"
-                        leftIcon={<ShoppingBag size={14} />}
-                      >
-                        Add to Bag
-                      </Button>
+                      {product.stock !== undefined && product.stock <= 0 ? (
+                        <button
+                          type="button"
+                          disabled
+                          className="w-full bg-slate-200 text-slate-500 border border-slate-300 py-2.5 px-3 rounded-full text-xs font-semibold uppercase tracking-wider cursor-not-allowed select-none shadow-sm flex items-center justify-center gap-1.5"
+                        >
+                          <ShoppingBag size={14} className="opacity-50" />
+                          <span>Out of Stock</span>
+                        </button>
+                      ) : (
+                        <Button
+                          onClick={(e) => handleAddToCart(e, product)}
+                          variant="primary"
+                          size="sm"
+                          className="w-full shadow-lg"
+                          leftIcon={<ShoppingBag size={14} />}
+                        >
+                          Add to Bag
+                        </Button>
+                      )}
                     </div>
                   </div>
 

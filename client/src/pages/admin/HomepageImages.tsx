@@ -394,7 +394,7 @@ const HomepageImages: React.FC = () => {
                 <div className="space-y-1">
                   <span className="text-xs font-bold text-gray-700 block">Editorial Cover Image</span>
                   <p className="text-[11px] text-gray-400 leading-normal font-sans">
-                    This represents the large portrait editorial cover image displayed inside the main "About Tree Born" storytelling segment on your homepage.
+                    This represents the large portrait editorial cover image displayed inside the main "About CosmeGlow" storytelling segment on your homepage.
                   </p>
                 </div>
 

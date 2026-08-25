@@ -63,7 +63,7 @@ export const GoogleLoginMock: React.FC = () => {
           Sign in with Google
         </h1>
         <p className="text-sm text-center text-[#444746] mb-8">
-          to continue to <span className="font-semibold text-primary">TREEBORN Skincare</span>
+          to continue to <span className="font-semibold text-primary">CosmeGlow Skincare</span>
         </p>
 
         {loadingAccount ? (
@@ -176,7 +176,7 @@ export const GoogleLoginMock: React.FC = () => {
         )}
 
         <div className="mt-8 text-[11px] text-[#5E6266] text-center leading-relaxed">
-          To continue, Google will share your name, email address, language preference, and profile picture with TREEBORN.
+          To continue, Google will share your name, email address, language preference, and profile picture with CosmeGlow.
         </div>
       </div>
     </div>

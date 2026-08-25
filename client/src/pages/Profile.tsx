@@ -130,7 +130,7 @@ export const Profile: React.FC = () => {
           doc.setFont('helvetica', 'bold');
           doc.setFontSize(22);
           doc.setTextColor(rgb.r, rgb.g, rgb.b);
-          doc.text(settings?.shopName || 'TREEBORN', 29, 20);
+          doc.text(settings?.shopName || 'CosmeGlow', 29, 20);
           
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(9);
@@ -140,7 +140,7 @@ export const Profile: React.FC = () => {
           doc.setFont('helvetica', 'bold');
           doc.setFontSize(22);
           doc.setTextColor(rgb.r, rgb.g, rgb.b);
-          doc.text(settings?.shopName || 'TREEBORN', 14, 20);
+          doc.text(settings?.shopName || 'CosmeGlow', 14, 20);
           
           doc.setFont('helvetica', 'normal');
           doc.setFontSize(9);
@@ -165,9 +165,9 @@ export const Profile: React.FC = () => {
         const addressText = `Address: ${settings?.address || 'India'}`;
         const splitAddress = doc.splitTextToSize(addressText, 95);
 
-        doc.text(`Shop: ${settings?.shopName || 'TREEBORN Skincare'}`, 14, 44);
+        doc.text(`Shop: ${settings?.shopName || 'CosmeGlow Skincare'}`, 14, 44);
         doc.text(`GST: ${settings?.gstNumber || '24AAAAA0000A1Z5'}`, 14, 49);
-        doc.text(`Email: ${settings?.email || 'support@treeborn.com'}`, 14, 54);
+        doc.text(`Email: ${settings?.email || 'support@cosmeglow.com'}`, 14, 54);
         doc.text(splitAddress, 14, 59);
         
         doc.setFont('helvetica', 'bold');
@@ -281,7 +281,7 @@ export const Profile: React.FC = () => {
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(10);
         doc.setTextColor(rgb.r, rgb.g, rgb.b);
-        doc.text('Thank you for choosing Tree Born!', 14, summaryY + 45);
+        doc.text('Thank you for choosing CosmeGlow!', 14, summaryY + 45);
         
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(8);
@@ -505,8 +505,8 @@ export const Profile: React.FC = () => {
   return (
     <>
       <SEO
-        title="My Profile — TREEBORN Skincare"
-        description="Manage your TREEBORN account details, shipping addresses, and review order history."
+        title="My Profile — CosmeGlow Skincare"
+        description="Manage your CosmeGlow account details, shipping addresses, and review order history."
       />
 
       <Navbar />
@@ -524,7 +524,7 @@ export const Profile: React.FC = () => {
                 {/* Dynamically generated initials bubble */}
                 <div className="w-18 h-18 sm:w-20 sm:h-20 rounded-full bg-gradient-to-tr from-primary-light to-primary border-2 border-light-blue-dark/50 flex items-center justify-center text-white font-display font-bold text-2xl sm:text-3xl shadow-xl backdrop-blur-md flex-shrink-0 relative">
                   {initials}
-                  <span className="absolute bottom-0 right-0 w-5.5 h-5.5 bg-secondary border-2 border-primary-dark rounded-full flex items-center justify-center shadow-xs" title="Premium Tree Born Circle Member">
+                  <span className="absolute bottom-0 right-0 w-5.5 h-5.5 bg-secondary border-2 border-primary-dark rounded-full flex items-center justify-center shadow-xs" title="Premium CosmeGlow Circle Member">
                     <CheckCircle size={11} className="text-white" />
                   </span>
                 </div>
@@ -538,7 +538,7 @@ export const Profile: React.FC = () => {
                     )}
                   </h1>
                   <p className="text-xs text-white/80 font-sans tracking-wide">
-                    {user.email} &bull; Tree Born Circle Member
+                    {user.email} &bull; CosmeGlow Circle Member
                   </p>
                 </div>
               </div>
@@ -1474,7 +1474,7 @@ export const Profile: React.FC = () => {
             <div className="space-y-1">
               <h3 className="text-lg font-bold text-gray-900">Log Out</h3>
               <p className="text-xs text-gray-500 leading-relaxed font-sans">
-                Are you sure you want to log out of your Tree Born account?
+                Are you sure you want to log out of your CosmeGlow account?
               </p>
             </div>
 

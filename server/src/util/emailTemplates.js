@@ -23,7 +23,7 @@ const getVerificationTemplate = (name, verificationUrl, currentYear) => `
     <div class="container" style="max-width:600px; width:100%; margin:0 auto; padding:35px 25px; background:#ffffff; border: 1px solid #eaeaea; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); box-sizing: border-box;">
       <div class="header" style="border-bottom:1px solid #e5e5e5; padding-bottom:20px; text-align: center;">
         <div class="logo" style="font-size:26px; font-weight:800; letter-spacing:4px; color:#111111; font-family:Arial,sans-serif;">
-          TREEBORN
+          COSMEGLOW
         </div>
         <div style="font-size:10px; text-transform:uppercase; letter-spacing:2px; color:#666666; margin-top:4px;">Biological Cellular Restoration Apothecary</div>
       </div>
@@ -36,7 +36,7 @@ const getVerificationTemplate = (name, verificationUrl, currentYear) => `
           Hello <strong>${name}</strong>,
         </p>
         <p class="text" style="font-size:15px; color:#444444; margin-bottom:24px; line-height: 1.6;">
-          Thank you for creating your TREEBORN account. Please verify your email address to activate your account and complete your registration.
+          Thank you for creating your COSMEGLOW account. Please verify your email address to activate your account and complete your registration.
         </p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${verificationUrl}" target="_blank" class="button" style="display:inline-block; background:#111111; color:#ffffff !important; text-decoration:none; padding:14px 32px; font-size:14px; font-weight:600; border-radius: 6px; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
@@ -65,19 +65,19 @@ const getVerificationTemplate = (name, verificationUrl, currentYear) => `
           Security Notice
         </div>
         <p class="note" style="font-size:13px; color:#777777; line-height: 1.5; margin: 0;">
-          If you did not create a TREEBORN account, you can safely ignore this email. No account will be activated unless the email address is verified.
+          If you did not create a COSMEGLOW account, you can safely ignore this email. No account will be activated unless the email address is verified.
         </p>
       </div>
 
       <div class="section support" style="padding:20px 0; border-bottom: none; text-align: center;">
         <p class="text" style="font-size:13px; color:#666666; margin: 0;">
           Need assistance? Contact our support team at
-          <a href="mailto:support@treeborn.shop" style="color:#111111; text-decoration:none; font-weight:600;">support@treeborn.shop</a>.
+          <a href="mailto:support@cosmeglow.com" style="color:#111111; text-decoration:none; font-weight:600;">support@cosmeglow.com</a>.
         </p>
       </div>
 
       <div class="footer" style="padding-top:20px; text-align:center; font-size:12px; color:#999999; border-top: 1px solid #eaeaea;">
-        © ${currentYear} <strong>TREEBORN</strong>. All rights reserved.
+        © ${currentYear} <strong>COSMEGLOW</strong>. All rights reserved.
       </div>
     </div>
   </div>
@@ -110,7 +110,7 @@ const getForgotPasswordTemplate = (name, resetUrl, currentYear) => `
     <div class="container" style="max-width:600px; width:100%; margin:0 auto; padding:35px 25px; background:#ffffff; border: 1px solid #eaeaea; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); box-sizing: border-box;">
       <div class="header" style="border-bottom:1px solid #e5e5e5; padding-bottom:20px; text-align: center;">
         <div class="logo" style="font-size:26px; font-weight:800; letter-spacing:4px; color:#111111; font-family:Arial,sans-serif;">
-          TREEBORN
+          COSMEGLOW
         </div>
         <div style="font-size:10px; text-transform:uppercase; letter-spacing:2px; color:#666666; margin-top:4px;">Biological Cellular Restoration Apothecary</div>
       </div>
@@ -123,7 +123,7 @@ const getForgotPasswordTemplate = (name, resetUrl, currentYear) => `
           Hello <strong>${name}</strong>,
         </p>
         <p class="text" style="font-size:15px; color:#444444; margin-bottom:24px; line-height: 1.6;">
-          We received a request to reset your password for your TREEBORN account. Click the button below to set a new password:
+          We received a request to reset your password for your COSMEGLOW account. Click the button below to set a new password:
         </p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${resetUrl}" target="_blank" class="button" style="display:inline-block; background:#111111; color:#ffffff !important; text-decoration:none; padding:14px 32px; font-size:14px; font-weight:600; border-radius: 6px; letter-spacing: 1px; box-shadow: 0 4px 10px rgba(0,0,0,0.15);">
@@ -159,12 +159,12 @@ const getForgotPasswordTemplate = (name, resetUrl, currentYear) => `
       <div class="section support" style="padding:20px 0; border-bottom: none; text-align: center;">
         <p class="text" style="font-size:13px; color:#666666; margin: 0;">
           Need assistance? Contact our support team at
-          <a href="mailto:support@treeborn.shop" style="color:#111111; text-decoration:none; font-weight:600;">support@treeborn.shop</a>.
+          <a href="mailto:support@cosmeglow.com" style="color:#111111; text-decoration:none; font-weight:600;">support@cosmeglow.com</a>.
         </p>
       </div>
 
       <div class="footer" style="padding-top:20px; text-align:center; font-size:12px; color:#999999; border-top: 1px solid #eaeaea;">
-        © ${currentYear} <strong>TREEBORN</strong>. All rights reserved.
+        © ${currentYear} <strong>COSMEGLOW</strong>. All rights reserved.
       </div>
     </div>
   </div>
@@ -197,7 +197,7 @@ const getOrderConfirmationTemplate = (order, itemsHtml, paymentMethod, paymentSt
     <div class="container" style="max-width:600px; width:100%; margin:0 auto; padding:35px 25px; background:#ffffff; border: 1px solid #eaeaea; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); box-sizing: border-box;">
       <div class="header" style="border-bottom:1px solid #e5e5e5; padding-bottom:20px; text-align: center;">
         <div class="logo" style="font-size:26px; font-weight:800; letter-spacing:4px; color:#111111; font-family:Arial,sans-serif;">
-          TREEBORN
+          COSMEGLOW
         </div>
         <div style="font-size:10px; text-transform:uppercase; letter-spacing:2px; color:#666666; margin-top:4px;">Biological Cellular Restoration Apothecary</div>
       </div>
@@ -210,7 +210,7 @@ const getOrderConfirmationTemplate = (order, itemsHtml, paymentMethod, paymentSt
           Hello <strong>${order.shippingAddress?.name || ''}</strong>,
         </p>
         <p class="text" style="font-size:14px; color:#555555; margin-bottom:18px;">
-          Thank you for shopping with TREEBORN. Your order has been successfully placed and is currently being processed. We'll notify you again once your order has been shipped.
+          Thank you for shopping with COSMEGLOW. Your order has been successfully placed and is currently being processed. We'll notify you again once your order has been shipped.
         </p>
       </div>
 
@@ -300,13 +300,13 @@ const getOrderConfirmationTemplate = (order, itemsHtml, paymentMethod, paymentSt
       <div class="section support" style="padding:20px 0; border-bottom: none; text-align: center;">
         <p style="font-size:13px; color:#666666; margin: 0; line-height: 1.6;">
           If you have any questions regarding your order, please contact us at
-          <a href="mailto:support@treeborn.shop" style="color:#111111; text-decoration:none; font-weight:600;">support@treeborn.shop</a>
+          <a href="mailto:support@cosmeglow.com" style="color:#111111; text-decoration:none; font-weight:600;">support@cosmeglow.com</a>
           and include your order number in your message.
         </p>
       </div>
 
       <div class="footer" style="padding-top:20px; text-align:center; font-size:12px; color:#999999; border-top: 1px solid #eaeaea;">
-        © ${currentYear} <strong>TREEBORN</strong>. All rights reserved.
+        © ${currentYear} <strong>COSMEGLOW</strong>. All rights reserved.
       </div>
     </div>
   </div>
@@ -322,7 +322,7 @@ const getAdminNewOrderTemplate = (order, paidDate, adminOrderUrl, paymentMethod,
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="color-scheme" content="light">
   <meta name="supported-color-schemes" content="light">
-  <title>New Paid Order - TREEBORN Admin</title>
+  <title>New Paid Order - COSMEGLOW Admin</title>
   <style>
     @media only screen and (max-width: 600px) {
       .email-wrapper { padding: 8px !important; }
@@ -339,7 +339,7 @@ const getAdminNewOrderTemplate = (order, paidDate, adminOrderUrl, paymentMethod,
     <div class="container" style="max-width:600px; width:100%; margin:0 auto; padding:35px 25px; background:#ffffff; border: 1px solid #eaeaea; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); box-sizing: border-box;">
       <div class="header" style="border-bottom:1px solid #e5e5e5; padding-bottom:20px; text-align: center;">
         <div class="logo" style="font-size:26px; font-weight:800; letter-spacing:4px; color:#111111; font-family:Arial,sans-serif;">
-          TREEBORN
+          COSMEGLOW
         </div>
         <div style="font-size:10px; text-transform:uppercase; letter-spacing:2px; color:#666666; margin-top:4px;">Admin Notification System</div>
       </div>
@@ -401,12 +401,12 @@ const getAdminNewOrderTemplate = (order, paidDate, adminOrderUrl, paymentMethod,
           View Order in Dashboard
         </a>
         <p class="note" style="margin-top:16px; font-size:13px; color:#666666;">
-          Open TreeBorn Admin Dashboard to manage shipping and fulfillment.
+          Open CosmeGlow Admin Dashboard to manage shipping and fulfillment.
         </p>
       </div>
 
       <div class="footer" style="padding-top:20px; text-align:center; font-size:12px; color:#999999; border-top: 1px solid #eaeaea;">
-        © ${currentYear} <strong>TREEBORN Admin</strong>. All rights reserved.
+        © ${currentYear} <strong>COSMEGLOW Admin</strong>. All rights reserved.
       </div>
     </div>
   </div>

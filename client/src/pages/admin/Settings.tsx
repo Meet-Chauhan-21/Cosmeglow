@@ -91,7 +91,7 @@ const Settings: React.FC = () => {
               enablePaypal: data.settings.enablePaypal !== false,
               enableCOD: data.settings.enableCOD !== false,
               facebookAppId: data.settings.facebookAppId || '',
-              shopName: data.settings.shopName || '',
+              shopName: data.settings.shopName || 'CosmeGlow Skincare',
               address: data.settings.address || '',
               gstNumber: data.settings.gstNumber || '',
               logo: data.settings.logo || '',
@@ -118,14 +118,14 @@ const Settings: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (!allowedTypes.includes(file.type)) {
-      toast.error('Invalid file type. Only JPG, JPEG, PNG, and WEBP are supported.');
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/svg+xml', 'image/avif'];
+    if (!allowedTypes.includes(file.type) && !file.type.startsWith('image/')) {
+      toast.error('Invalid file type. Only JPG, JPEG, PNG, WEBP, AVIF, and SVG images are supported.');
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('File size must be less than 5MB.');
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error('File size must be less than 10MB.');
       return;
     }
 
@@ -146,24 +146,48 @@ const Settings: React.FC = () => {
         const data = await response.json();
         const uploadedUrl = data.url;
 
-        // If there was an old logo, delete it
-        if (formData.logo) {
+        // If there was an old logo, delete it from Cloudinary
+        if (formData.logo && formData.logo !== uploadedUrl) {
           const oldPublicId = getPublicIdFromUrl(formData.logo);
           if (oldPublicId && accessToken) {
-            await deleteCloudinaryAsset(oldPublicId, accessToken);
+            deleteCloudinaryAsset(oldPublicId, accessToken).catch(err => console.warn('Old logo deletion ignored:', err));
           }
         }
 
-        setFormData(prev => ({ ...prev, logo: uploadedUrl }));
-        toast.success('Logo uploaded successfully');
+        const updatedData = { ...formData, logo: uploadedUrl };
+        setFormData(updatedData);
+
+        // Auto-save the uploaded logo directly to store settings
+        if (accessToken) {
+          const saveRes = await fetch(`${API_BASE_URL}/admin/settings`, {
+            method: 'PUT',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${accessToken}`
+            },
+            body: JSON.stringify(updatedData)
+          });
+          if (saveRes.ok) {
+            const savedJson = await saveRes.json();
+            updateLocalSettings(savedJson.settings);
+            toast.success('Logo uploaded and saved successfully!');
+          } else {
+            toast.success('Logo uploaded (click Save Settings to confirm)');
+          }
+        } else {
+          toast.success('Logo uploaded successfully');
+        }
       } else {
-        toast.error('Failed to upload logo to Cloudinary');
+        const errData = await response.json().catch(() => ({}));
+        toast.error(errData.message || 'Failed to upload logo to Cloudinary');
       }
     } catch (err) {
       console.error(err);
       toast.error('Error uploading logo');
     } finally {
       setUploading(false);
+      // Reset input value so same file can be selected again if needed
+      e.target.value = '';
     }
   };
 
@@ -181,7 +205,28 @@ const Settings: React.FC = () => {
       }
     }
     
-    setFormData(prev => ({ ...prev, logo: '' }));
+    const updatedData = { ...formData, logo: '' };
+    setFormData(updatedData);
+
+    // Auto-save cleared logo to database
+    if (accessToken) {
+      try {
+        const saveRes = await fetch(`${API_BASE_URL}/admin/settings`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${accessToken}`
+          },
+          body: JSON.stringify(updatedData)
+        });
+        if (saveRes.ok) {
+          const savedJson = await saveRes.json();
+          updateLocalSettings(savedJson.settings);
+        }
+      } catch (e) {
+        console.error('Error saving cleared logo:', e);
+      }
+    }
   };
 
   const handleSave = async () => {
@@ -234,7 +279,7 @@ const Settings: React.FC = () => {
                       value={formData.email}
                       onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary font-sans text-sm"
-                      placeholder="support@treeborn.com"
+                      placeholder="support@cosmeglow.com"
                     />
                   </div>
                   <div>
@@ -256,7 +301,7 @@ const Settings: React.FC = () => {
                       value={formData.shopName}
                       onChange={(e) => setFormData({ ...formData, shopName: e.target.value })}
                       className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary font-sans text-sm"
-                      placeholder="TREEBORN Skincare"
+                      placeholder="CosmeGlow Skincare"
                     />
                   </div>
                   <div>

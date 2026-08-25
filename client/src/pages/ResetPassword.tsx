@@ -51,8 +51,8 @@ export const ResetPassword: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background font-sans">
       <Helmet>
-        <title>Reset Password — TREEBORN</title>
-        <meta name="description" content="Set a new password for your TreeBorn account." />
+        <title>Reset Password — CosmeGlow</title>
+        <meta name="description" content="Set a new password for your CosmeGlow account." />
       </Helmet>
 
       <Navbar />
@@ -70,7 +70,7 @@ export const ResetPassword: React.FC = () => {
                 Reset Your Password
               </h1>
               <p className="text-sm text-gray-500 mt-2">
-                Please enter a new password for your TREEBORN account below.
+                Please enter a new password for your CosmeGlow account below.
               </p>
             </div>
 

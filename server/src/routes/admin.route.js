@@ -18,11 +18,11 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024 // 5 MB max
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-    if (allowedTypes.includes(file.mimetype)) {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/svg+xml', 'image/avif'];
+    if (allowedTypes.includes(file.mimetype) || file.mimetype.startsWith('image/')) {
       cb(null, true);
     } else {
-      cb(new Error('Invalid file type. Only JPG, JPEG, PNG, and WEBP are allowed.'), false);
+      cb(new Error('Invalid file type. Only JPG, JPEG, PNG, WEBP, AVIF, and SVG images are allowed.'), false);
     }
   }
 });
@@ -121,6 +121,7 @@ router.post('/orders/:id/cancel-shipment', shipmentController.cancelShipment);
 
 // User endpoints
 router.get('/users', userController.getAllUsers);
+router.post('/users/bulk-delete', userController.bulkDeleteUsers);
 router.get('/users/:id', userController.getUserById);
 router.put('/users/:id', userController.updateUser);
 router.delete('/users/:id', userController.deleteUser);

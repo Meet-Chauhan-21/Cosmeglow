@@ -129,7 +129,7 @@ export const PaymentSuccessModal: React.FC<PaymentSuccessModalProps> = ({
               {isCOD ? 'Order Confirmed!' : 'Payment Successful!'}
             </h2>
             <p className="text-xs text-slate-500 font-sans">
-              Thank you for shopping with <strong className="text-slate-800">TREEBORN Skincare</strong>.
+              Thank you for shopping with <strong className="text-slate-800">CosmeGlow Skincare</strong>.
             </p>
           </motion.div>
 

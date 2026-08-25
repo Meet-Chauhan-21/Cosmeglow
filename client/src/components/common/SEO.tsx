@@ -11,7 +11,7 @@ export interface SEOProps {
   jsonLd?: Record<string, any> | Array<Record<string, any>>;
 }
 
-const PRODUCTION_DOMAIN = 'https://www.treeborn.shop';
+const PRODUCTION_DOMAIN = 'https://www.cosmeglow.com';
 
 const getSiteUrl = (): string => {
   if (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost')) {
@@ -27,9 +27,9 @@ export const ensureAbsoluteUrl = (url?: string): string => {
   return `${getSiteUrl()}/${url}`;
 };
 
-const DEFAULT_TITLE = 'TREEBORN — Organic Botanical Skincare & Cellular Restoration';
-const DEFAULT_DESCRIPTION = 'Unlock your skin\'s biological potential with TREEBORN\'s luxury organic, cruelty-free botanical skincare formulas. Formulated for deep moisture, collagen restoration, and natural glow.';
-const DEFAULT_KEYWORDS = 'treeborn, treeborn skincare, organic skincare, botanical skincare India, face serum, collagen serum, natural glow cream, vegan skincare brand, anti aging cream India, organic skincare shop';
+const DEFAULT_TITLE = 'CosmeGlow — Organic Botanical Skincare & Cellular Restoration';
+const DEFAULT_DESCRIPTION = 'Unlock your skin\'s biological potential with CosmeGlow\'s luxury organic, cruelty-free botanical skincare formulas. Formulated for deep moisture, collagen restoration, and natural glow.';
+const DEFAULT_KEYWORDS = 'cosmeglow, cosmeglow skincare, organic skincare, botanical skincare India, face serum, collagen serum, natural glow cream, vegan skincare brand, anti aging cream India, organic skincare shop';
 
 export const SEO: React.FC<SEOProps> = ({
   title = DEFAULT_TITLE,
@@ -44,17 +44,17 @@ export const SEO: React.FC<SEOProps> = ({
   const pageUrl = canonical || (typeof window !== 'undefined' ? window.location.href : siteUrl);
   const absoluteOgImage = ensureAbsoluteUrl(ogImage || `${siteUrl}/og-image.png`);
 
-  const fullTitle = title.includes('TREEBORN') ? title : `${title} | TREEBORN Skincare`;
+  const fullTitle = title.includes('CosmeGlow') ? title : `${title} | CosmeGlow Skincare`;
 
   const defaultOrganizationSchema = {
     '@context': 'https://schema.org',
     '@type': 'Organization',
-    name: 'TREEBORN Skincare',
+    name: 'CosmeGlow Skincare',
     url: siteUrl,
     logo: `${siteUrl}/logo.png`,
     sameAs: [
-      'https://instagram.com/treebornskincare',
-      'https://facebook.com/treebornskincare'
+      'https://instagram.com/cosmeglowskincare',
+      'https://facebook.com/cosmeglowskincare'
     ],
     contactPoint: {
       '@type': 'ContactPoint',
@@ -83,7 +83,7 @@ export const SEO: React.FC<SEOProps> = ({
       <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
       {/* Open Graph / Facebook / WhatsApp */}
-      <meta property="og:site_name" content="TREEBORN Skincare" />
+      <meta property="og:site_name" content="CosmeGlow Skincare" />
       <meta property="og:type" content={ogType} />
       <meta property="og:title" content={fullTitle} />
       <meta property="og:description" content={description} />

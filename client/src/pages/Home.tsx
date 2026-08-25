@@ -16,11 +16,11 @@ export const Home: React.FC = () => {
   const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
-    name: 'TREEBORN Skincare',
-    url: 'https://www.treeborn.shop',
+    name: 'CosmeGlow Skincare',
+    url: 'https://www.cosmeglow.com',
     potentialAction: {
       '@type': 'SearchAction',
-      target: 'https://www.treeborn.shop/shop?q={search_term_string}',
+      target: 'https://www.cosmeglow.com/shop?q={search_term_string}',
       'query-input': 'required name=search_term_string'
     }
   };
@@ -28,19 +28,19 @@ export const Home: React.FC = () => {
   const storeSchema = {
     '@context': 'https://schema.org',
     '@type': 'OnlineStore',
-    name: 'TREEBORN Skincare',
-    url: 'https://www.treeborn.shop',
-    logo: 'https://www.treeborn.shop/logo.png',
-    image: 'https://www.treeborn.shop/og-image.png',
-    description: "Unlock your skin's biological potential with TREEBORN's luxury organic, cruelty-free botanical skincare formulas."
+    name: 'CosmeGlow Skincare',
+    url: 'https://www.cosmeglow.com',
+    logo: 'https://www.cosmeglow.com/logo.png',
+    image: 'https://www.cosmeglow.com/og-image.png',
+    description: "Unlock your skin's biological potential with CosmeGlow's luxury organic, cruelty-free botanical skincare formulas."
   };
 
   return (
     <>
       <SEO
-        title="TREEBORN — Organic Botanical Skincare & Cellular Restoration"
-        description="Unlock your skin's biological potential with TREEBORN's luxury organic, cruelty-free botanical skincare formulas. Formulated for deep moisture, collagen restoration, and natural glow."
-        keywords="treeborn, treeborn skincare, botanical skincare India, organic face serum, collagen serum, natural glow cream, vegan skincare brand, anti aging cream India, clear skin formula"
+        title="CosmeGlow — Organic Botanical Skincare & Cellular Restoration"
+        description="Unlock your skin's biological potential with CosmeGlow's luxury organic, cruelty-free botanical skincare formulas. Formulated for deep moisture, collagen restoration, and natural glow."
+        keywords="cosmeglow, cosmeglow skincare, botanical skincare India, organic face serum, collagen serum, natural glow cream, vegan skincare brand, anti aging cream India, clear skin formula"
         jsonLd={[websiteSchema, storeSchema]}
       />
 

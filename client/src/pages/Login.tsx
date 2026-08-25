@@ -181,8 +181,8 @@ export const Login: React.FC = () => {
   return (
     <>
       <SEO
-        title="Account Login — TREEBORN Skincare"
-        description="Sign in to your TREEBORN Skincare account to track orders, manage preferences, and view exclusive botanical offers."
+        title="Account Login — CosmeGlow Skincare"
+        description="Sign in to your CosmeGlow Skincare account to track orders, manage preferences, and view exclusive botanical offers."
       />
 
       <Navbar />
@@ -220,7 +220,7 @@ export const Login: React.FC = () => {
                 
                 <div className="flex items-center gap-2 text-xs text-secondary font-semibold font-display">
                   <Sparkles size={14} />
-                  <span>TREEBORN Gold Circle Benefits</span>
+                  <span>CosmeGlow Gold Circle Benefits</span>
                 </div>
               </div>
             </div>
@@ -231,7 +231,7 @@ export const Login: React.FC = () => {
                 {!showFbEmailForm && (
                   <div>
                     <h1 className="text-2xl font-display font-bold text-dark tracking-tight">
-                      Welcome to TREEBORN
+                      Welcome to CosmeGlow
                     </h1>
                     <p className="text-xs text-gray-500 font-sans mt-1">
                       Please enter your credentials or sign in with Google to manage your botanicals order.
@@ -518,7 +518,7 @@ export const Login: React.FC = () => {
                     <SocialLoginButtons redirectPage="login" />
 
                     <p className="text-center text-xs text-gray-500 font-sans pt-2">
-                      Don't have an TREEBORN Account?{' '}
+                      Don't have a CosmeGlow Account?{' '}
                       <Link to="/register" className="font-semibold text-primary hover:underline">
                         Create Account
                       </Link>

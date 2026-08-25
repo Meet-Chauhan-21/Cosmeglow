@@ -11,5 +11,5 @@ Disallow: /admin/*
 Disallow: /checkout
 Disallow: /profile
 
-Sitemap: https://www.treeborn.shop/sitemap.xml
+Sitemap: https://www.cosmeglow.com/sitemap.xml
 

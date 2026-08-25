@@ -125,13 +125,24 @@ export const WishlistDrawer: React.FC = () => {
 
                       {/* Add to Bag Action */}
                       <div className="mt-2.5">
-                        <button
-                          onClick={() => handleMoveToCart(product)}
-                          className="w-full bg-primary/5 hover:bg-primary hover:text-white text-primary text-xs font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all duration-300 cursor-pointer"
-                        >
-                          <ShoppingBag size={12} />
-                          <span>Add to Bag</span>
-                        </button>
+                        {product.stock !== undefined && product.stock <= 0 ? (
+                          <button
+                            type="button"
+                            disabled
+                            className="w-full bg-slate-100 text-slate-400 border border-slate-200 text-xs font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 cursor-not-allowed select-none"
+                          >
+                            <ShoppingBag size={12} className="opacity-40" />
+                            <span>Out of Stock</span>
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleMoveToCart(product)}
+                            className="w-full bg-primary/5 hover:bg-primary hover:text-white text-primary text-xs font-semibold py-2 rounded-lg flex items-center justify-center gap-1.5 transition-all duration-300 cursor-pointer"
+                          >
+                            <ShoppingBag size={12} />
+                            <span>Add to Bag</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>

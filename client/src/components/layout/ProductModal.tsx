@@ -208,27 +208,40 @@ export const ProductModal: React.FC = () => {
               <div className="flex items-center border border-border-gray/60 rounded-full bg-light-gray overflow-hidden">
                 <button
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  className="p-3 hover:bg-gray-200 text-dark/70 transition-colors focus:outline-none cursor-pointer"
+                  disabled={activeProduct.stock !== undefined && activeProduct.stock <= 0}
+                  className="p-3 hover:bg-gray-200 text-dark/70 transition-colors focus:outline-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Minus size={13} strokeWidth={2.5} />
                 </button>
                 <span className="px-4 text-sm font-semibold text-dark font-sans">{quantity}</span>
                 <button
                   onClick={() => setQuantity((q) => q + 1)}
-                  className="p-3 hover:bg-gray-200 text-dark/70 transition-colors focus:outline-none cursor-pointer"
+                  disabled={activeProduct.stock !== undefined && activeProduct.stock <= 0}
+                  className="p-3 hover:bg-gray-200 text-dark/70 transition-colors focus:outline-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Plus size={13} strokeWidth={2.5} />
                 </button>
               </div>
 
               {/* Add to Cart Button */}
-              <button
-                onClick={handleAddToCart}
-                className="flex-grow bg-primary hover:bg-primary-light active:scale-[0.99] text-white py-3.5 px-6 rounded-full font-display font-semibold text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all duration-300"
-              >
-                <ShoppingBag size={14} />
-                <span>Add to Bag</span>
-              </button>
+              {activeProduct.stock !== undefined && activeProduct.stock <= 0 ? (
+                <button
+                  type="button"
+                  disabled
+                  className="flex-grow bg-slate-200 text-slate-500 border border-slate-300 py-3.5 px-6 rounded-full font-display font-semibold text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-not-allowed select-none shadow-none"
+                >
+                  <ShoppingBag size={14} className="opacity-50" />
+                  <span>Out of Stock</span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleAddToCart}
+                  className="flex-grow bg-primary hover:bg-primary-light active:scale-[0.99] text-white py-3.5 px-6 rounded-full font-display font-semibold text-xs tracking-wider uppercase flex items-center justify-center gap-2 cursor-pointer shadow-md transition-all duration-300"
+                >
+                  <ShoppingBag size={14} />
+                  <span>Add to Bag</span>
+                </button>
+              )}
 
               {/* Wishlist Button */}
               <button

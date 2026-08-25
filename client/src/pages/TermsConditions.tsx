@@ -35,8 +35,8 @@ export const TermsConditions: React.FC = () => {
   return (
     <>
       <SEO
-        title="Terms & Conditions — TREEBORN Skincare"
-        description="Read the official Terms & Conditions for shopping online and using the TREEBORN Skincare website and services."
+        title="Terms & Conditions — CosmeGlow Skincare"
+        description="Read the official Terms & Conditions for shopping online and using the CosmeGlow Skincare website and services."
       />
 
       <Navbar />
@@ -46,7 +46,7 @@ export const TermsConditions: React.FC = () => {
           <div className="max-w-3xl mx-auto space-y-10">
             <div className="text-center pb-6 border-b border-slate-100 mb-8">
               <h1 className="text-4xl font-display font-bold text-slate-900 tracking-tight">Terms & Conditions</h1>
-              <p className="text-xs text-slate-500 mt-2 uppercase tracking-widest font-semibold">TreeBorn Collection Legal Document</p>
+              <p className="text-xs text-slate-500 mt-2 uppercase tracking-widest font-semibold">CosmeGlow Collection Legal Document</p>
             </div>
 
             {loading ? (

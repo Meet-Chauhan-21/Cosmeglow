@@ -134,7 +134,7 @@ export const Pagination: React.FC<PaginationProps> = ({
                   onPageChange(1);
                 }}
                 hClass="h-8 px-2"
-                options={[10, 15, 30, 50].map((limit) => ({
+                options={[10, 15, 25, 50, 100, 250, 500, 1000, 2500, 5000].map((limit) => ({
                   value: String(limit),
                   label: String(limit),
                 }))}

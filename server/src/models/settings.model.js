@@ -32,7 +32,7 @@ const settingsSchema = new mongoose.Schema(
     },
     shopName: {
       type: String,
-      default: 'TREEBORN Skincare'
+      default: 'CosmeGlow Skincare'
     }, 
     address: {
       type: String,
@@ -142,7 +142,7 @@ const settingsSchema = new mongoose.Schema(
         {
           title: 'General Terms',
           content: [
-            'By accessing or purchasing from TreeBorn, you agree to comply with our Terms & Conditions.',
+            'By accessing or purchasing from CosmeGlow, you agree to comply with our Terms & Conditions.',
             'We reserve the right to update these terms at any time.'
           ]
         }

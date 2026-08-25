@@ -32,7 +32,7 @@ const StoreContext = createContext<StoreContextType | undefined>(undefined);
 
 export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cart, setCart] = useState<CartItem[]>(() => {
-    const saved = localStorage.getItem('treeborn_cart');
+    const saved = localStorage.getItem('cosmeglow_cart');
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -43,7 +43,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [categoriesLoading, setCategoriesLoading] = useState(true);
 
   const [wishlist, setWishlist] = useState<Product[]>(() => {
-    const saved = localStorage.getItem('treeborn_wishlist');
+    const saved = localStorage.getItem('cosmeglow_wishlist');
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -53,7 +53,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   const [settings, setSettings] = useState<AppSettings>(() => {
     try {
-      const saved = localStorage.getItem('treeborn_settings');
+      const saved = localStorage.getItem('cosmeglow_settings');
       if (saved) return JSON.parse(saved);
     } catch (e) {
       console.error('Failed to parse saved settings', e);
@@ -65,7 +65,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       enableCreditCard: true,
       enablePaypal: true,
       enableCOD: true,
-      shopName: 'TREEBORN Skincare',
+      shopName: 'CosmeGlow Skincare',
       address: '10, GURUKRUPA SOCIETY, NEAR ARCHANA SOCIETY, DABHOLI ROAD, KATARGAM SURAT GUJARAT 395004 India',
       gstNumber: '24AAAAA0000A1Z5',
       logo: 'https://images.unsplash.com/photo-1617897903246-719242758050?q=80&w=200&auto=format&fit=crop',
@@ -99,7 +99,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setSettings(newSettings);
     applyThemeColor(newSettings.themeColor);
     try {
-      localStorage.setItem('treeborn_settings', JSON.stringify(newSettings));
+      localStorage.setItem('cosmeglow_settings', JSON.stringify(newSettings));
     } catch (e) {
       console.error(e);
     }
@@ -159,7 +159,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           setSettings(data);
           applyThemeColor(data.themeColor);
           try {
-            localStorage.setItem('treeborn_settings', JSON.stringify(data));
+            localStorage.setItem('cosmeglow_settings', JSON.stringify(data));
           } catch (e) {
             console.error(e);
           }
@@ -174,11 +174,11 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Sync to local storage
   useEffect(() => {
-    localStorage.setItem('treeborn_cart', JSON.stringify(cart));
+    localStorage.setItem('cosmeglow_cart', JSON.stringify(cart));
   }, [cart]);
 
   useEffect(() => {
-    localStorage.setItem('treeborn_wishlist', JSON.stringify(wishlist));
+    localStorage.setItem('cosmeglow_wishlist', JSON.stringify(wishlist));
   }, [wishlist]);
 
   useEffect(() => {

@@ -26,9 +26,9 @@ connectDB();
 // CORS configuration (allow credentials for HttpOnly cookie transfer)
 const allowedOrigins = [
   'http://localhost:5173',
-  'https://treeborn.vercel.app',
-  'https://www.treeborn.shop',
-  'https://treeborn.shop'
+  'https://cosmeglow.vercel.app',
+  'https://www.cosmeglow.com',
+  'https://cosmeglow.com'
 ];
 
 const corsOptions = {
@@ -57,7 +57,7 @@ app.use(cookieParser());
 
 // Base Route
 app.get('/', (req, res) => {
-  res.status(200).json({ message: 'TreeBorn Backend API is running successfully' });
+  res.status(200).json({ message: 'CosmeGlow Backend API is running successfully' });
 });
 
 const Settings = require('./src/models/settings.model');

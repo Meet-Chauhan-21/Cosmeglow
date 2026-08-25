@@ -498,116 +498,115 @@ const OrdersList: React.FC = () => {
         </div>
 
         <Card>
-          <div className="flex flex-col md:flex-row md:items-center justify-start gap-4 mb-6">
-            <div className="relative w-full md:w-80">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-              <input
-                type="text"
-                placeholder="Search orders..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full pl-11 pr-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-500 placeholder-slate-400 text-sm h-10"
-              />
-            </div>
-            <Select
-              value={statusFilter}
-              onChange={(val) => {
-                setStatusFilter(val);
-                setCurrentPage(1);
-              }}
-              hClass="h-10"
-              className="w-full md:w-48 text-left"
-              options={[
-                { value: 'all', label: 'All Status' },
-                { value: 'pending', label: 'Pending' },
-                { value: 'confirmed', label: 'Confirmed' },
-                { value: 'cancelled', label: 'Cancelled' },
-              ]}
-            />
-            <div className="relative w-full md:w-48">
-              <input
-                type="date"
-                value={dateFilter}
-                onChange={(e) => {
-                  setDateFilter(e.target.value);
-                  setCurrentPage(1);
-                }}
-                className="w-full px-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-500 text-sm h-10 text-slate-705 font-sans cursor-pointer"
-              />
-              {dateFilter && (
-                <button
-                  onClick={() => {
-                    setDateFilter('');
+          <div className="flex items-center justify-between gap-3 mb-6 flex-wrap xl:flex-nowrap">
+            {/* Left Filter Controls */}
+            <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap shrink-0">
+              <div className="relative w-full sm:w-72 md:w-80">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+                <input
+                  type="text"
+                  placeholder="Search orders..."
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="absolute right-8 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-650 text-xs font-semibold px-1"
-                  title="Clear Date"
-                >
-                  ✕
-                </button>
-              )}
-            </div>
-            <button
-              onClick={() => fetchOrders(true)}
-              disabled={reloading}
-              className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-slate-800 transition-all cursor-pointer shadow-3xs flex items-center justify-center h-10 w-10 shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/20"
-              title="Reload Orders"
-            >
-              <RotateCw size={18} className={reloading ? 'animate-spin' : ''} />
-            </button>
-          </div>
-
-          {/* Bulk Action Bar */}
-          {selectedOrderIds.length > 0 && (
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-900 text-white rounded-2xl shadow-md border border-slate-800 transition-all duration-300">
-              <div className="flex items-center gap-3">
-                <span className="inline-flex items-center justify-center px-3 py-1 text-xs font-bold bg-indigo-600 text-white rounded-xl border border-indigo-500">
-                  {selectedOrderIds.length} Order{selectedOrderIds.length > 1 ? 's' : ''} Selected
-                </span>
-                <button
-                  type="button"
-                  onClick={handleClearSelection}
-                  className="text-xs text-slate-300 hover:text-white underline underline-offset-2 transition-colors cursor-pointer font-medium"
-                >
-                  Clear Selection
-                </button>
+                  className="w-full pl-11 pr-4 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-500 placeholder-slate-400 text-sm h-10"
+                />
               </div>
+              <Select
+                value={statusFilter}
+                onChange={(val) => {
+                  setStatusFilter(val);
+                  setCurrentPage(1);
+                }}
+                hClass="h-10"
+                className="w-36 md:w-40 text-left shrink-0"
+                options={[
+                  { value: 'all', label: 'All Status' },
+                  { value: 'pending', label: 'Pending' },
+                  { value: 'confirmed', label: 'Confirmed' },
+                  { value: 'cancelled', label: 'Cancelled' },
+                ]}
+              />
+              <div className="relative w-36 md:w-40 shrink-0">
+                <input
+                  type="date"
+                  value={dateFilter}
+                  onChange={(e) => {
+                    setDateFilter(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="w-full px-3.5 bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-600/5 focus:border-indigo-500 text-xs h-10 text-slate-700 font-sans cursor-pointer"
+                />
+                {dateFilter && (
+                  <button
+                    onClick={() => {
+                      setDateFilter('');
+                      setCurrentPage(1);
+                    }}
+                    className="absolute right-7 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-650 text-xs font-semibold px-1"
+                    title="Clear Date"
+                  >
+                    ✕
+                  </button>
+                )}
+              </div>
+              <button
+                onClick={() => fetchOrders(true)}
+                disabled={reloading}
+                className="p-2.5 bg-white border border-slate-200 rounded-xl text-slate-500 hover:text-slate-800 transition-all cursor-pointer shadow-3xs flex items-center justify-center h-10 w-10 shrink-0 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                title="Reload Orders"
+              >
+                <RotateCw size={18} className={reloading ? 'animate-spin' : ''} />
+              </button>
+            </div>
 
-              <div className="flex items-center gap-3">
+            {/* Inline Bulk Actions in Single Line */}
+            {selectedOrderIds.length > 0 && (
+              <div className="flex items-center gap-2.5 shrink-0 flex-nowrap ml-auto whitespace-nowrap">
+                <span className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold bg-indigo-50 text-indigo-700 rounded-xl border border-indigo-200 shadow-3xs shrink-0 whitespace-nowrap">
+                  <span>{selectedOrderIds.length} Selected</span>
+                  <button
+                    type="button"
+                    onClick={handleClearSelection}
+                    className="text-indigo-400 hover:text-indigo-700 ml-0.5 text-xs cursor-pointer font-bold"
+                    title="Clear selection"
+                  >
+                    ✕
+                  </button>
+                </span>
+
                 {/* Bulk Status Select */}
-                <div className="w-48 text-left">
+                <div className="w-36 text-left shrink-0">
                   <Select
                     value=""
-                    placeholder="Change Status"
+                    placeholder="Set Status"
                     disabled={bulkUpdating}
                     onChange={(val) => handleBulkStatusChange(val)}
-                    hClass="h-9 px-3"
-                    buttonClassName="bg-slate-800 text-white border-slate-700 hover:bg-slate-750"
+                    hClass="h-10 px-2.5"
+                    buttonClassName="bg-white border-slate-200 text-slate-700 hover:border-indigo-400 text-xs"
                     options={[
-                      { value: 'Pending', label: 'Mark as Pending' },
-                      { value: 'Confirmed', label: 'Mark as Confirmed' },
-                      { value: 'Cancelled', label: 'Mark as Cancelled' },
+                      { value: 'Pending', label: 'Mark Pending' },
+                      { value: 'Confirmed', label: 'Mark Confirmed' },
+                      { value: 'Cancelled', label: 'Mark Cancelled' },
                     ]}
                   />
                 </div>
 
-                {/* Bulk Delete Button */}
-                <Button
-                  variant="ghost"
-                  size="sm"
+                {/* Bulk Delete Button (Only Dustbin Icon) */}
+                <button
+                  type="button"
                   disabled={bulkUpdating}
                   onClick={() => setBulkDeleteModalOpen(true)}
-                  className="!bg-rose-600 hover:!bg-rose-700 text-white border-none h-9 px-3.5 rounded-xl font-semibold text-xs transition-all shadow-sm flex items-center gap-1.5 cursor-pointer"
+                  className="h-10 w-10 bg-rose-50 hover:bg-rose-100 text-rose-600 hover:text-rose-700 border border-rose-200 rounded-xl flex items-center justify-center transition-all shadow-3xs cursor-pointer shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                  title={`Delete ${selectedOrderIds.length} selected order(s)`}
                 >
-                  <Trash2 size={14} />
-                  <span>Delete Selected ({selectedOrderIds.length})</span>
-                </Button>
+                  <Trash2 size={16} className="text-rose-600" />
+                </button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
 
           <DataTable
             columns={columns}

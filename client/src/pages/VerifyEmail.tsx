@@ -56,7 +56,7 @@ export const VerifyEmail: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>Verify Email — TREEBORN Skincare</title>
+        <title>Verify Email — CosmeGlow Skincare</title>
       </Helmet>
 
       <Navbar />
@@ -74,7 +74,7 @@ export const VerifyEmail: React.FC = () => {
                 <div className="space-y-2">
                   <h2 className="text-xl font-display font-bold text-dark">Checking...</h2>
                   <p className="text-xs text-gray-500 font-sans max-w-xs mx-auto leading-relaxed">
-                    Verifying your email token with TreeBorn cellular database. Please hold on.
+                    Verifying your email token with CosmeGlow cellular database. Please hold on.
                   </p>
                 </div>
               </div>

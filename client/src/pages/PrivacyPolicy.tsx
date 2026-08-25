@@ -35,8 +35,8 @@ export const PrivacyPolicy: React.FC = () => {
   return (
     <>
       <SEO
-        title="Privacy Policy — TREEBORN Skincare"
-        description="Read the official TREEBORN Skincare Privacy Policy regarding how we process, protect, and respect your personal data and information."
+        title="Privacy Policy — CosmeGlow Skincare"
+        description="Read the official CosmeGlow Skincare Privacy Policy regarding how we process, protect, and respect your personal data and information."
       />
 
       <Navbar />
@@ -46,7 +46,7 @@ export const PrivacyPolicy: React.FC = () => {
           <div className="max-w-3xl mx-auto space-y-10">
             <div className="text-center pb-6 border-b border-slate-100 mb-8">
               <h1 className="text-4xl font-display font-bold text-slate-900 tracking-tight">Privacy Policy</h1>
-              <p className="text-xs text-slate-500 mt-2 uppercase tracking-widest font-semibold">TreeBorn Collection Legal Document</p>
+              <p className="text-xs text-slate-500 mt-2 uppercase tracking-widest font-semibold">CosmeGlow Collection Legal Document</p>
             </div>
 
             {loading ? (
