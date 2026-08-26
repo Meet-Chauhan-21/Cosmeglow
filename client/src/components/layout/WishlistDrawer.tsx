@@ -25,22 +25,24 @@ export const WishlistDrawer: React.FC = () => {
     <AnimatePresence>
       {isWishlistOpen && (
         <>
-          {/* Backdrop Overlay */}
+          {/* Backdrop Overlay - GPU friendly without heavy backdrop-blur */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs"
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 bg-black/50"
             onClick={() => setIsWishlistOpen(false)}
           />
 
-          {/* Sliding Panel */}
+          {/* Sliding Panel with GPU hardware acceleration */}
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-            className="fixed right-0 top-0 bottom-0 z-50 w-full sm:w-[420px] bg-white shadow-2xl flex flex-col h-full overflow-hidden"
+            transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+            style={{ willChange: 'transform' }}
+            className="fixed right-0 top-0 bottom-0 z-50 w-[86%] max-w-[390px] sm:w-[420px] sm:max-w-none bg-white rounded-l-2xl sm:rounded-l-none shadow-2xl flex flex-col h-full overflow-hidden"
           >
             {/* Header */}
             <div className="flex items-center justify-between p-6 border-b border-border-gray/60">

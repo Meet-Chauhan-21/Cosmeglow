@@ -6,7 +6,7 @@ import { Container } from './Container';
 import { useStore } from '../../context/StoreContext';
 import { useAuth } from '../../context/AuthContext';
 import type { Product } from '../../types';
-import logoImg from '../../images/logo.png';
+import logoImg from '../../images/logo-rounded.png';
 
 export const Navbar: React.FC = () => {
   const location = useLocation();
@@ -199,8 +199,8 @@ export const Navbar: React.FC = () => {
               <img 
                 src={logoImg} 
                 alt="CosmeGlow logo" 
-                className={`transition-all duration-500 object-contain ${
-                  isScrolled ? 'h-8 w-auto mt-0.5' : 'h-11 w-auto mt-1.5'
+                className={`transition-all duration-500 object-contain rounded-full shadow-xs ${
+                  isScrolled ? 'h-7 w-7 mt-0.5' : 'h-9 w-9 mt-1'
                 }`} 
               />
               <span className={`text-primary transition-all duration-500 font-bold tracking-normal ${

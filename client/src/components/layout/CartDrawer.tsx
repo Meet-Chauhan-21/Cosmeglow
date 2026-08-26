@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Plus, Minus, Trash2, ShoppingBag } from 'lucide-react';
@@ -14,6 +14,18 @@ export const CartDrawer: React.FC = () => {
     removeFromCart,
     settings,
   } = useStore();
+
+  // Prevent background scrolling on mobile when cart drawer is open
+  useEffect(() => {
+    if (isCartOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isCartOpen]);
 
   const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
   const itemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
@@ -35,41 +47,44 @@ export const CartDrawer: React.FC = () => {
     <AnimatePresence>
       {isCartOpen && (
         <>
-          {/* Backdrop Overlay */}
+          {/* Backdrop Overlay - GPU friendly without heavy backdrop-blur */}
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs"
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 bg-black/50"
             onClick={() => setIsCartOpen(false)}
           />
 
-          {/* Sliding Panel */}
+          {/* Sliding Panel with GPU hardware acceleration */}
           <motion.div
             initial={{ x: '100%' }}
             animate={{ x: 0 }}
             exit={{ x: '100%' }}
-            transition={{ type: 'spring', damping: 25, stiffness: 220 }}
-            className="fixed right-0 top-0 bottom-0 z-50 w-full sm:w-[420px] bg-white shadow-2xl flex flex-col h-full overflow-hidden"
+            transition={{ duration: 0.28, ease: [0.32, 0.72, 0, 1] }}
+            style={{ willChange: 'transform' }}
+            className="fixed right-0 top-0 bottom-0 z-50 w-[86%] max-w-[390px] sm:w-[420px] sm:max-w-none bg-white rounded-l-2xl sm:rounded-l-none shadow-2xl flex flex-col h-full overflow-hidden"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-border-gray/60">
+            <div className="flex items-center justify-between p-5 sm:p-6 border-b border-border-gray/60 bg-white">
               <div className="flex items-center gap-2">
                 <ShoppingBag size={20} className="text-primary" />
-                <h2 className="font-display font-semibold text-lg text-dark">
+                <h2 className="font-display font-semibold text-base sm:text-lg text-dark">
                   Shopping Bag ({itemsCount})
                 </h2>
               </div>
               <button
                 onClick={() => setIsCartOpen(false)}
-                className="p-1 rounded-full hover:bg-gray-100 text-dark transition-colors cursor-pointer focus:outline-none"
+                className="p-1.5 rounded-full hover:bg-gray-100 text-dark transition-colors cursor-pointer focus:outline-none active:scale-95"
+                aria-label="Close Cart"
               >
                 <X size={20} />
               </button>
             </div>
 
             {/* Cart Items List */}
-            <div className="flex-grow overflow-y-auto p-6 space-y-6">
+            <div className="flex-grow overflow-y-auto p-5 sm:p-6 space-y-6 overscroll-contain">
               
               {/* Free Shipping Indicator */}
               {itemsCount > 0 && showFreeShippingProgress && (
@@ -89,7 +104,7 @@ export const CartDrawer: React.FC = () => {
                   </div>
                   <div className="w-full bg-white/60 h-1.5 rounded-full overflow-hidden">
                     <div
-                      className="bg-primary h-full transition-all duration-500"
+                      className="bg-primary h-full transition-all duration-300"
                       style={{ width: `${progressToFreeShipping}%` }}
                     />
                   </div>
@@ -125,6 +140,8 @@ export const CartDrawer: React.FC = () => {
                       <img
                         src={item.product.image}
                         alt={item.product.name}
+                        loading="eager"
+                        decoding="async"
                         className="w-full h-full object-cover object-center"
                       />
                     </div>
@@ -156,7 +173,7 @@ export const CartDrawer: React.FC = () => {
                             onClick={() =>
                               updateCartQuantity(item.product.id, item.selectedSize, item.quantity - 1)
                             }
-                            className="p-1.5 hover:bg-gray-200 text-dark/70 transition-colors focus:outline-none cursor-pointer"
+                            className="p-1.5 hover:bg-gray-200 text-dark/70 transition-colors focus:outline-none cursor-pointer active:scale-90"
                           >
                             <Minus size={11} strokeWidth={2.5} />
                           </button>
@@ -167,7 +184,7 @@ export const CartDrawer: React.FC = () => {
                             onClick={() =>
                               updateCartQuantity(item.product.id, item.selectedSize, item.quantity + 1)
                             }
-                            className="p-1.5 hover:bg-gray-200 text-dark/70 transition-colors focus:outline-none cursor-pointer"
+                            className="p-1.5 hover:bg-gray-200 text-dark/70 transition-colors focus:outline-none cursor-pointer active:scale-90"
                           >
                             <Plus size={11} strokeWidth={2.5} />
                           </button>
@@ -185,7 +202,7 @@ export const CartDrawer: React.FC = () => {
 
             {/* Footer Summary / Actions */}
             {cart.length > 0 && (
-              <div className="border-t border-border-gray/60 p-6 bg-light-gray/40 space-y-4">
+              <div className="border-t border-border-gray/60 p-5 sm:p-6 bg-light-gray/40 space-y-4">
                 <div className="space-y-1.5">
                   <div className="flex justify-between text-xs text-gray-500 font-sans">
                     <span>Shipping</span>
@@ -199,7 +216,7 @@ export const CartDrawer: React.FC = () => {
 
                 <button
                   onClick={handleCheckout}
-                  className="w-full bg-primary hover:bg-primary-light active:scale-[0.99] text-white py-3.5 rounded-full font-display font-semibold text-sm tracking-wider uppercase shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all duration-300"
+                  className="w-full bg-primary hover:bg-primary-light active:scale-[0.99] text-white py-3.5 rounded-full font-display font-semibold text-sm tracking-wider uppercase shadow-md flex items-center justify-center gap-2 cursor-pointer transition-all duration-200"
                 >
                   <span>Proceed to Checkout</span>
                 </button>
@@ -214,3 +231,4 @@ export const CartDrawer: React.FC = () => {
 };
 
 export default CartDrawer;
+
