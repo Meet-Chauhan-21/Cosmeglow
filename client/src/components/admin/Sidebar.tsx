@@ -107,7 +107,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ collapsed, setCollapsed }) => 
     return initialState;
   });
 
-  const logoUrl = settings?.logo || 'https://images.unsplash.com/photo-1617897903246-719242758050?q=80&w=200&auto=format&fit=crop';
+  const logoUrl = settings?.logo || '/logo.png';
 
   // Auto-expand menus that contain active sub-items on mount or path change
   useEffect(() => {

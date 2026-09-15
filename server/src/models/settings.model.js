@@ -44,7 +44,7 @@ const settingsSchema = new mongoose.Schema(
     },
     logo: {
       type: String,
-      default: 'https://images.unsplash.com/photo-1617897903246-719242758050?q=80&w=200&auto=format&fit=crop'
+      default: '/logo.png'
     },
     enableTax: {
       type: Boolean,

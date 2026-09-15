@@ -358,7 +358,7 @@ const Settings: React.FC = () => {
                       {formData.logo ? (
                         <img src={formData.logo} alt="Store Logo Preview" className="h-full w-auto object-contain" />
                       ) : (
-                        <span className="text-[10px] text-gray-400 font-sans">No logo uploaded</span>
+                        <img src="/logo.png" alt="Official Logo" className="h-full w-auto object-contain opacity-80" />
                       )}
                     </div>
                   </div>

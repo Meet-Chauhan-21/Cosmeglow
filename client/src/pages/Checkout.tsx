@@ -360,7 +360,7 @@ export const Checkout: React.FC = () => {
           currency: data.currency || 'INR',
           name: settings.shopName || 'CosmeGlow Skincare',
           description: 'Botanical Skincare Order Payment',
-          image: settings.logo || 'https://images.unsplash.com/photo-1617897903246-719242758050?q=80&w=200&auto=format&fit=crop',
+          image: settings.logo || '/logo.png',
           order_id: data.razorpayOrderId,
           prefill: {
             name: shippingAddress.name,

@@ -54,7 +54,13 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [settings, setSettings] = useState<AppSettings>(() => {
     try {
       const saved = localStorage.getItem('cosmeglow_settings');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.logo && parsed.logo.includes('719242758050')) {
+          parsed.logo = '/logo.png';
+        }
+        return parsed;
+      }
     } catch (e) {
       console.error('Failed to parse saved settings', e);
     }
@@ -68,7 +74,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       shopName: 'CosmeGlow Skincare',
       address: '10, GURUKRUPA SOCIETY, NEAR ARCHANA SOCIETY, DABHOLI ROAD, KATARGAM SURAT GUJARAT 395004 India',
       gstNumber: '24AAAAA0000A1Z5',
-      logo: 'https://images.unsplash.com/photo-1617897903246-719242758050?q=80&w=200&auto=format&fit=crop',
+      logo: '/logo.png',
       enableTax: false,
       taxPercentage: 8,
       taxName: 'GST',
