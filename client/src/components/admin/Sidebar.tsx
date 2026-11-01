@@ -15,7 +15,8 @@ import {
   ChevronDown,
   PlusCircle,
   List,
-  Activity
+  Activity,
+  Mail
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -68,7 +69,8 @@ const menuSections: MenuSection[] = [
   {
     title: 'User Management',
     items: [
-      { label: 'Users', icon: Users, path: '/admin/users' }
+      { label: 'Users', icon: Users, path: '/admin/users' },
+      { label: 'Send Email', icon: Mail, path: '/admin/send-email' }
     ]
   },
   {

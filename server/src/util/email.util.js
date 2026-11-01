@@ -4,7 +4,8 @@ const {
   getVerificationTemplate,
   getForgotPasswordTemplate,
   getOrderConfirmationTemplate,
-  getAdminNewOrderTemplate
+  getAdminNewOrderTemplate,
+  getCustomAdminEmailTemplate
 } = require('./emailTemplates');
 
 // Force DNS resolver to prefer IPv4 over IPv6 to resolve ENETUNREACH in IPv4-only cloud environments like Render
@@ -68,11 +69,58 @@ const createTransporter = () => {
   return null;
 };
 
+const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+
+/**
+ * Parses and sanitizes recipient emails from strings or arrays.
+ * Handles "email@domain.com", "Name <email@domain.com>", comma/semicolon/newline separated values.
+ */
+const sanitizeRecipientList = (input) => {
+  if (!input) return [];
+  const rawItems = Array.isArray(input) ? input : String(input).split(/[,;\n\r]+/);
+  const recipients = [];
+
+  for (let item of rawItems) {
+    if (!item) continue;
+    if (typeof item === 'object' && item.email) {
+      const cleanEmail = String(item.email).trim().toLowerCase();
+      if (EMAIL_REGEX.test(cleanEmail)) {
+        recipients.push({ email: cleanEmail, ...(item.name ? { name: String(item.name).trim() } : {}) });
+      }
+      continue;
+    }
+
+    const str = String(item).trim();
+    if (!str) continue;
+
+    const angleMatch = str.match(/^(?:["']?([^"']*)["']?\s*)?<([^>]+)>$/);
+    if (angleMatch) {
+      const name = angleMatch[1]?.trim();
+      const email = angleMatch[2]?.trim().toLowerCase();
+      if (email && EMAIL_REGEX.test(email)) {
+        recipients.push({ email, ...(name ? { name } : {}) });
+        continue;
+      }
+    }
+
+    const cleanEmail = str.replace(/^[<"']+|[>"']+$/g, '').trim().toLowerCase();
+    if (EMAIL_REGEX.test(cleanEmail)) {
+      recipients.push({ email: cleanEmail });
+    }
+  }
+
+  return recipients;
+};
+
 /**
  * Clean helper function to send emails.
  * Supports both Brevo REST API (HTTPS/443, required for Render Free Tier) and standard Nodemailer (SMTP).
  */
-const sendEmail = async ({ to, subject, html }) => {
+const sendEmail = async ({ to, subject, html, cc, bcc }) => {
+  const cleanTo = sanitizeRecipientList(to);
+  const cleanCc = sanitizeRecipientList(cc);
+  const cleanBcc = sanitizeRecipientList(bcc);
+
   // Option 1: Brevo REST API (highly recommended for Render Free Tier to bypass SMTP port blocks)
   if (process.env.BREVO_API_KEY) {
     console.log("📨 Sending email via Brevo REST API (HTTPS)...");
@@ -81,10 +129,26 @@ const sendEmail = async ({ to, subject, html }) => {
     // Parse sender name and email from "Name <email>" format
     let senderName = 'CosmeGlow Skincare';
     let senderEmail = 'dabhisanjay901@gmail.com';
-    const match = fromEmail.match(/^(?:"?([^"]*)"?\s)?(?:<(.+)>)$/);
+    const match = fromEmail.match(/^(?:["']?([^"']*)["']?\s*)?<([^>]+)>$/);
     if (match) {
       senderName = match[1] || 'CosmeGlow Skincare';
       senderEmail = match[2];
+    }
+
+    const fallbackTo = Array.isArray(to) ? to.map(e => ({ email: typeof e === 'string' ? e.trim() : e.email.trim() })) : [{ email: to.trim() }];
+    const payload = {
+      sender: { name: senderName, email: senderEmail },
+      to: cleanTo.length > 0 ? cleanTo : fallbackTo,
+      subject: subject,
+      htmlContent: html
+    };
+
+    if (cleanCc.length > 0) {
+      payload.cc = cleanCc;
+    }
+
+    if (cleanBcc.length > 0) {
+      payload.bcc = cleanBcc;
     }
 
     const response = await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -94,12 +158,7 @@ const sendEmail = async ({ to, subject, html }) => {
         'api-key': process.env.BREVO_API_KEY,
         'content-type': 'application/json'
       },
-      body: JSON.stringify({
-        sender: { name: senderName, email: senderEmail },
-        to: [{ email: to }],
-        subject: subject,
-        htmlContent: html
-      })
+      body: JSON.stringify(payload)
     });
 
     const data = await response.json();
@@ -114,12 +173,20 @@ const sendEmail = async ({ to, subject, html }) => {
   const transporter = createTransporter();
   if (transporter) {
     const fromEmail = process.env.EMAIL_FROM || `"CosmeGlow Skincare" <${process.env.SMTP_USER}>`;
-    const email_info = await transporter.sendMail({
+    const mailOptions = {
       from: fromEmail,
       to: to,
       subject: subject,
       html: html,
-    });
+    };
+    if (cleanCc.length > 0) {
+      mailOptions.cc = cleanCc.map(r => r.name ? `"${r.name}" <${r.email}>` : r.email).join(', ');
+    }
+    if (cleanBcc.length > 0) {
+      mailOptions.bcc = cleanBcc.map(r => r.name ? `"${r.name}" <${r.email}>` : r.email).join(', ');
+    }
+
+    const email_info = await transporter.sendMail(mailOptions);
     console.log("✅ Email sent via SMTP successfully:", email_info);
     return true;
   }
@@ -292,10 +359,45 @@ const sendPasswordResetEmail = async (email, name, token) => {
   return true;
 };
 
+const sendCustomAdminEmail = async ({ to, subject, message, cc, bcc, logoUrl }) => {
+  const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
+  const resolvedLogo = logoUrl || `${clientUrl}/logo.png`;
+  const currentYear = new Date().getFullYear().toString();
+  const htmlContent = getCustomAdminEmailTemplate(subject, message, currentYear, resolvedLogo);
+
+  console.log("📧 sendCustomAdminEmail called");
+  console.log("Recipient:", to);
+  if (cc) console.log("CC:", cc);
+  if (bcc) console.log("BCC:", bcc);
+  console.log("Subject:", subject);
+
+  try {
+    const sent = await sendEmail({ to, subject, html: htmlContent, cc, bcc });
+    if (!sent) {
+      console.log('\n==================================================');
+      console.log('✉️ [MOCK EMAIL] Custom Admin Email Dispatched');
+      console.log(`📧 Recipient: ${to}`);
+      if (cc) console.log(`📋 CC: ${cc}`);
+      if (bcc) console.log(`🔒 BCC: ${bcc}`);
+      console.log(`📌 Subject: ${subject}`);
+      console.log(`📝 Message:\n${message}`);
+      console.log('==================================================\n');
+    }
+  } catch (error) {
+    console.error("❌ SEND CUSTOM ADMIN EMAIL ERROR");
+    console.error(error);
+    throw error;
+  }
+
+  return true;
+};
+
 module.exports = {
+  sendEmail,
   sendVerificationEmail,
   sendPasswordResetEmail,
   sendOrderConfirmationEmail,
   sendAdminNewOrderEmail,
+  sendCustomAdminEmail,
 };
 

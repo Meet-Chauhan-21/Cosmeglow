@@ -26,6 +26,7 @@ import HomepageImages from '../pages/admin/HomepageImages';
 import VerifyEmail from '../pages/VerifyEmail';
 import ResetPassword from '../pages/ResetPassword';
 import ApiMetrics from '../pages/admin/ApiMetrics';
+import SendEmail from '../pages/admin/SendEmail';
 
 export const router = createBrowserRouter([
   {
@@ -108,6 +109,10 @@ export const router = createBrowserRouter([
   {
     path: '/admin/users',
     element: <UsersList />,
+  },
+  {
+    path: '/admin/send-email',
+    element: <SendEmail />,
   },
   {
     path: '/admin/users/:id',

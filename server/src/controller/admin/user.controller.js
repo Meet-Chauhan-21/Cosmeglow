@@ -148,10 +148,148 @@ const bulkDeleteUsers = async (req, res) => {
   }
 };
 
+// @desc    Send custom email to user(s)
+// @route   POST /api/admin/send-email
+// @access  Private/Admin
+const sendEmailToUser = async (req, res) => {
+  try {
+    const { email, emails, sendToAll, subject, message, cc, bcc, logoUrl } = req.body;
+
+    if (!subject || !subject.trim()) {
+      return res.status(400).json({ message: 'Email subject is required.' });
+    }
+
+    if (!message || !message.trim()) {
+      return res.status(400).json({ message: 'Email message description is required.' });
+    }
+
+    const { validateEmailAddress } = require('../../util/emailValidation.util');
+    const { sendCustomAdminEmail } = require('../../util/email.util');
+
+    // Validate CC if provided
+    if (cc && typeof cc === 'string' && cc.trim()) {
+      const ccItems = cc.split(/[,;\n\r]+/).map(e => e.trim()).filter(Boolean);
+      for (const item of ccItems) {
+        const emailMatch = item.match(/<([^>]+)>/) ? item.match(/<([^>]+)>/)[1].trim() : item;
+        const check = validateEmailAddress(emailMatch);
+        if (!check.valid) {
+          return res.status(400).json({ message: `Invalid email in CC: "${item}". Please enter a valid email (e.g. name@example.com).` });
+        }
+      }
+    }
+
+    // Validate BCC if provided
+    if (bcc && typeof bcc === 'string' && bcc.trim()) {
+      const bccItems = bcc.split(/[,;\n\r]+/).map(e => e.trim()).filter(Boolean);
+      for (const item of bccItems) {
+        const emailMatch = item.match(/<([^>]+)>/) ? item.match(/<([^>]+)>/)[1].trim() : item;
+        const check = validateEmailAddress(emailMatch);
+        if (!check.valid) {
+          return res.status(400).json({ message: `Invalid email in BCC: "${item}". Please enter a valid email (e.g. name@example.com).` });
+        }
+      }
+    }
+
+    // Case 1: Send to All Registered Users
+    if (sendToAll) {
+      const users = await User.find({ role: 'user', email: { $exists: true, $ne: '' } }).select('email name');
+      if (!users || users.length === 0) {
+        return res.status(404).json({ message: 'No registered users found to send email to.' });
+      }
+
+      let successCount = 0;
+      let failureCount = 0;
+
+      for (const u of users) {
+        try {
+          await sendCustomAdminEmail({
+            to: u.email.trim(),
+            subject: subject.trim(),
+            message: message.trim(),
+            cc,
+            bcc,
+            logoUrl
+          });
+          successCount++;
+        } catch (err) {
+          console.error(`Failed to send email to ${u.email}:`, err);
+          failureCount++;
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: `Email broadcast completed. Dispatched to ${successCount} user(s).${failureCount > 0 ? ` Failed: ${failureCount}.` : ''}`,
+        count: successCount
+      });
+    }
+
+    // Case 2: Array of recipient emails
+    if (Array.isArray(emails) && emails.length > 0) {
+      let successCount = 0;
+      for (const recipient of emails) {
+        const cleanEmail = typeof recipient === 'string' ? recipient.trim() : recipient?.email?.trim();
+        if (cleanEmail) {
+          try {
+            await sendCustomAdminEmail({
+              to: cleanEmail,
+              subject: subject.trim(),
+              message: message.trim(),
+              cc,
+              bcc,
+              logoUrl
+            });
+            successCount++;
+          } catch (err) {
+            console.error(`Failed to send to ${cleanEmail}:`, err);
+          }
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: `Dispatched email to ${successCount} recipient(s) successfully!`,
+        count: successCount
+      });
+    }
+
+    // Case 3: Single recipient email
+    if (!email || !email.trim()) {
+      return res.status(400).json({ message: 'Recipient email address is required.' });
+    }
+
+    const cleanEmail = email.trim();
+    const emailCheck = validateEmailAddress(cleanEmail);
+    if (!emailCheck.valid) {
+      return res.status(400).json({ message: emailCheck.reason || 'Invalid recipient email address format.' });
+    }
+
+    await sendCustomAdminEmail({
+      to: cleanEmail,
+      subject: subject.trim(),
+      message: message.trim(),
+      cc,
+      bcc,
+      logoUrl
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: `Email sent successfully to ${cleanEmail}!`
+    });
+  } catch (error) {
+    console.error('Send Email Admin Error:', error);
+    return res.status(500).json({
+      message: error.message || 'Server error. Failed to send email.'
+    });
+  }
+};
+
 module.exports = {
   getAllUsers,
   getUserById,
   updateUser,
   deleteUser,
-  bulkDeleteUsers
+  bulkDeleteUsers,
+  sendEmailToUser
 };

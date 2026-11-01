@@ -70,7 +70,17 @@ const UserView: React.FC = () => {
           <Button type="button" variant="ghost" icon={ArrowLeft} onClick={() => navigate('/admin/users')}>
             Back
           </Button>
-          <StatusBadge status={user.role === 'admin' ? 'active' : 'pending'} label={user.role === 'admin' ? 'Admin' : 'User'} />
+          <div className="flex items-center gap-2.5">
+            <Button
+              type="button"
+              icon={Mail}
+              onClick={() => navigate(`/admin/send-email?email=${encodeURIComponent(user.email)}&name=${encodeURIComponent(user.name || '')}`)}
+              className="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-3.5 py-2 shadow-xs"
+            >
+              Send Email
+            </Button>
+            <StatusBadge status={user.role === 'admin' ? 'active' : 'pending'} label={user.role === 'admin' ? 'Admin' : 'User'} />
+          </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

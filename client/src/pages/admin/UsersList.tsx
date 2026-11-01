@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Trash2, Phone, RotateCw } from 'lucide-react';
+import { Search, Trash2, Phone, RotateCw, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import AdminLayout from '../../components/admin/AdminLayout';
@@ -221,7 +221,18 @@ const UsersList: React.FC = () => {
       header: '',
       className: 'text-right',
       render: (item: any) => (
-        <div className="flex items-center justify-end gap-2">
+                <div className="flex items-center justify-end gap-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="!text-indigo-600 hover:!text-indigo-750 hover:!bg-indigo-50"
+            icon={Mail}
+            title="Send Email"
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate(`/admin/send-email?email=${encodeURIComponent(item.email)}&name=${encodeURIComponent(item.name || '')}`);
+            }}
+          />
           {item.role !== 'admin' && (
             <Button
               variant="ghost"

@@ -121,6 +121,7 @@ router.post('/orders/:id/cancel-shipment', shipmentController.cancelShipment);
 
 // User endpoints
 router.get('/users', userController.getAllUsers);
+router.post('/send-email', userController.sendEmailToUser);
 router.post('/users/bulk-delete', userController.bulkDeleteUsers);
 router.get('/users/:id', userController.getUserById);
 router.put('/users/:id', userController.updateUser);

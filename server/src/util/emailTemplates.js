@@ -414,9 +414,71 @@ const getAdminNewOrderTemplate = (order, paidDate, adminOrderUrl, paymentMethod,
 </html>
 `;
 
+const getCustomAdminEmailTemplate = (subject, message, currentYear, logoUrl) => {
+  // Check if message is already HTML from the rich text editor
+  const isHtml = /<[a-z][\s\S]*>/i.test(message || '');
+  const bodyContent = isHtml
+    ? message
+    : (message || '')
+        .split(/\r?\n\r?\n/)
+        .map(p => `<p class="text" style="font-size:15px; color:#374151; line-height:1.7; margin:0 0 16px 0;">${p.replace(/\r?\n/g, '<br/>')}</p>`)
+        .join('');
+
+  return `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>${subject}</title>
+  <style>
+    @media only screen and (max-width: 600px) {
+      .email-wrapper { padding: 10px !important; }
+      .container { padding: 20px 15px !important; width: 100% !important; max-width: 100% !important; }
+      .title { font-size: 19px !important; }
+      .text { font-size: 14px !important; }
+    }
+  </style>
+</head>
+<body style="background:#f9fafb; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif; color:#222222; line-height:1.6; margin:0; padding:0; box-sizing:border-box;">
+  <div class="email-wrapper" style="width:100%; background:#f9fafb; padding: 30px 10px; box-sizing: border-box;">
+    <div class="container" style="max-width:600px; width:100%; margin:0 auto; padding:35px 25px; background:#ffffff; border: 1px solid #eaeaea; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.03); box-sizing: border-box;">
+      <div class="header" style="border-bottom:1px solid #e5e5e5; padding-bottom:20px; text-align: center;">
+        <img src="${logoUrl}" alt="CosmeGlow" style="max-height:50px; width:auto; max-width:200px; object-fit:contain; margin:0 auto; display:block;" />
+      </div>
+      
+      <div class="section" style="padding:28px 0; border-bottom:1px solid #ececec;">
+        <div class="title" style="font-size:20px; font-weight:700; color:#111111; margin-bottom:18px; text-align: left;">
+          ${subject}
+        </div>
+        <div style="color:#374151; font-size:15px; line-height:1.7;">
+          ${bodyContent}
+        </div>
+      </div>
+
+      <div class="section support" style="padding:20px 0; border-bottom: none; text-align: center;">
+        <p class="text" style="font-size:13px; color:#666666; margin: 0;">
+          Need assistance? Contact our support team at
+          <a href="mailto:support@cosmeglow.com" style="color:#111111; text-decoration:none; font-weight:600;">support@cosmeglow.com</a>.
+        </p>
+      </div>
+
+      <div class="footer" style="padding-top:20px; text-align:center; font-size:12px; color:#999999; border-top: 1px solid #eaeaea;">
+        © ${currentYear} <strong>COSMEGLOW</strong>. All rights reserved.
+      </div>
+    </div>
+  </div>
+</body>
+</html>
+`;
+};
+
 module.exports = {
   getVerificationTemplate,
   getForgotPasswordTemplate,
   getOrderConfirmationTemplate,
-  getAdminNewOrderTemplate
+  getAdminNewOrderTemplate,
+  getCustomAdminEmailTemplate
 };

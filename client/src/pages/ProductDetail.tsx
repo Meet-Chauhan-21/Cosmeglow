@@ -9,46 +9,17 @@ import Container from '../components/layout/Container';
 import Button from '../components/layout/Button';
 import WhatsAppButton from '../components/layout/WhatsAppButton';
 import { useStore } from '../context/StoreContext';
+import { VideoPlayer } from '../util/video.util';
 const renderVideoPlayer = (url: string) => {
   if (!url) return null;
-
-  const ytRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-  const ytMatch = url.match(ytRegex);
-  if (ytMatch && ytMatch[1]) {
-    return (
-      <iframe
-        className="w-full h-full aspect-video border-0"
-        src={`https://www.youtube.com/embed/${ytMatch[1]}?autoplay=1&mute=1&rel=0`}
-        title="Product Video"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        allowFullScreen
-      />
-    );
-  }
-
-  const vimeoRegex = /(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(\d+)/;
-  const vimeoMatch = url.match(vimeoRegex);
-  if (vimeoMatch && vimeoMatch[1]) {
-    return (
-      <iframe
-        className="w-full h-full aspect-video border-0"
-        src={`https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1&muted=1`}
-        title="Product Video"
-        allow="autoplay; fullscreen; picture-in-picture"
-        allowFullScreen
-      />
-    );
-  }
-
   return (
-    <video
-      src={url}
-      className="w-full h-full object-contain"
-      controls
-      autoPlay
-      muted
-      playsInline
-      preload="metadata"
+    <VideoPlayer
+      url={url}
+      className="w-full h-full aspect-video border-0 object-contain"
+      autoPlay={true}
+      muted={true}
+      controls={true}
+      title="Product Video"
     />
   );
 };

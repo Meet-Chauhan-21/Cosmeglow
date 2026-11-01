@@ -7,6 +7,7 @@ import Button from '../../components/admin/Button';
 import StatusBadge from '../../components/admin/StatusBadge';
 import { useAuth } from '../../context/AuthContext';
 import { fetchPublicProductById } from '../../services/products';
+import { VideoPlayer } from '../../util/video.util';
 
 const ProductView: React.FC = () => {
   const navigate = useNavigate();
@@ -158,6 +159,21 @@ const ProductView: React.FC = () => {
                 )}
               </div>
             </Card>
+
+            {product.video && (
+              <Card title="Product Video">
+                <div className="w-full aspect-video rounded-2xl overflow-hidden bg-black border border-gray-150">
+                  <VideoPlayer
+                    url={product.video}
+                    className="w-full h-full border-0 object-contain bg-black"
+                    controls={true}
+                    autoPlay={false}
+                    muted={true}
+                    title="Product Video"
+                  />
+                </div>
+              </Card>
+            )}
           </div>
 
           {/* Right Column: Detailed Product Information (Col span 7) */}

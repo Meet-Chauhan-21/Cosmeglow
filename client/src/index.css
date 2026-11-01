@@ -165,6 +165,14 @@ body {
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
 }
 
+.admin-theme input:not([type="checkbox"]):not([type="radio"]).pl-9 {
+  padding-left: 2.25rem !important;
+}
+
+.admin-theme input:not([type="checkbox"]):not([type="radio"]).pl-10 {
+  padding-left: 2.5rem !important;
+}
+
 .admin-theme input:not([type="checkbox"]):not([type="radio"]).pl-11 {
   padding-left: 2.75rem !important;
 }
@@ -230,4 +238,84 @@ body {
 
 .admin-theme ::-webkit-scrollbar-thumb:hover {
   background: #94a3b8;
+}
+
+/* Rich text editor contenteditable placeholder and typography */
+div[contenteditable]:empty::before {
+  content: attr(data-placeholder);
+  color: #94a3b8;
+  pointer-events: none;
+  font-style: italic;
+  display: block;
+}
+
+div[contenteditable] ul,
+.email-preview-content ul {
+  list-style-type: disc;
+  padding-left: 1.25rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+div[contenteditable] ol,
+.email-preview-content ol {
+  list-style-type: decimal;
+  padding-left: 1.25rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+div[contenteditable] h1,
+.email-preview-content h1 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
+  color: #0f172a;
+}
+
+div[contenteditable] h2,
+.email-preview-content h2 {
+  font-size: 1.125rem;
+  font-weight: 700;
+  margin-top: 0.75rem;
+  margin-bottom: 0.5rem;
+  color: #1e293b;
+}
+
+div[contenteditable] h3,
+.email-preview-content h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  margin-bottom: 0.25rem;
+  color: #334155;
+}
+
+div[contenteditable] p,
+.email-preview-content p {
+  margin-bottom: 0.5rem;
+  line-height: 1.6;
+}
+
+div[contenteditable] table,
+.email-preview-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0.75rem 0;
+}
+
+div[contenteditable] th,
+div[contenteditable] td,
+.email-preview-content th,
+.email-preview-content td {
+  border: 1px solid #e2e8f0;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.75rem;
+}
+
+div[contenteditable] a,
+.email-preview-content a {
+  color: #4f46e5;
+  text-decoration: underline;
 }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, X } from 'lucide-react';
+import { ArrowLeft, X, Video, ExternalLink } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useFormik } from 'formik';
@@ -13,6 +13,7 @@ import { API_BASE_URL } from '../../config';
 import Select from '../../components/admin/Select';
 import { useStore } from '../../context/StoreContext';
 import { getPublicIdFromUrl, deleteCloudinaryAsset } from '../../services/cloudinary';
+import { VideoPlayer, parseVideoUrl } from '../../util/video.util';
 
 const ProductForm: React.FC = () => {
   const navigate = useNavigate();
@@ -282,36 +283,14 @@ const ProductForm: React.FC = () => {
   };
 
   const renderVideoPreview = (url: string) => {
-    const ytRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-    const ytMatch = url.match(ytRegex);
-    if (ytMatch && ytMatch[1]) {
-      return (
-        <iframe
-          className="w-full h-full border-0"
-          src={`https://www.youtube.com/embed/${ytMatch[1]}`}
-          title="Video Preview"
-        />
-      );
-    }
-
-    const vimeoRegex = /(?:vimeo\.com\/|player\.vimeo\.com\/video\/)(\d+)/;
-    const vimeoMatch = url.match(vimeoRegex);
-    if (vimeoMatch && vimeoMatch[1]) {
-      return (
-        <iframe
-          className="w-full h-full border-0"
-          src={`https://player.vimeo.com/video/${vimeoMatch[1]}`}
-          title="Video Preview"
-        />
-      );
-    }
-
     return (
-      <video
-        src={url}
-        className="w-full h-full object-contain bg-black"
-        controls
-        playsInline
+      <VideoPlayer
+        url={url}
+        className="w-full h-full border-0 object-contain bg-black"
+        autoPlay={false}
+        muted={true}
+        controls={true}
+        title="Product Video Preview"
       />
     );
   };
@@ -836,74 +815,105 @@ const ProductForm: React.FC = () => {
               <Card title="Product Video (Optional)">
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Video URL</label>
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="block text-sm font-semibold text-gray-700">Video URL</label>
+                      {formik.values.video && (
+                        <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center gap-1">
+                          {parseVideoUrl(formik.values.video)?.platformName || 'Video Linked'}
+                        </span>
+                      )}
+                    </div>
                     <input
                       type="text"
                       name="video"
                       value={formik.values.video}
-                      onChange={formik.handleChange}
+                      onChange={(e) => {
+                        let val = e.target.value;
+                        const iframeMatch = val.match(/src=["']([^"']+)["']/i);
+                        if (iframeMatch && iframeMatch[1]) {
+                          val = iframeMatch[1];
+                        }
+                        formik.setFieldValue('video', val);
+                      }}
                       onBlur={formik.handleBlur}
-                      className={`w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${
+                      className={`w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 text-sm ${
                         formik.touched.video && formik.errors.video ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-indigo-500'
                       }`}
-                      placeholder="Paste YouTube, Vimeo, or direct video URL"
+                      placeholder="Paste YouTube, Vimeo, Google Drive, or direct video URL"
                     />
+                    <p className="text-[11px] text-gray-400 mt-1.5">
+                      Supports YouTube (standard, shorts, live, embed), Vimeo, Google Drive, and MP4/WebM videos.
+                    </p>
                   </div>
 
+                  {formik.values.video ? (
+                    <div className="space-y-2">
+                      <div className="relative w-full aspect-video bg-black rounded-2xl overflow-hidden border border-gray-200 shadow-sm group">
+                        {renderVideoPreview(formik.values.video)}
+                        <div className="absolute top-2.5 right-2.5 flex items-center gap-1.5 z-20">
+                          <a
+                            href={parseVideoUrl(formik.values.video)?.originalUrl || formik.values.video}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="p-1.5 rounded-xl bg-black/60 hover:bg-black/80 text-white backdrop-blur-sm transition-all text-xs"
+                            title="Open Video in New Tab"
+                          >
+                            <ExternalLink size={14} />
+                          </a>
+                          <button
+                            type="button"
+                            onClick={async () => {
+                              const url = formik.values.video;
+                              const publicId = getPublicIdFromUrl(url);
+                              if (publicId && accessToken) {
+                                await deleteCloudinaryAsset(publicId, accessToken, 'video');
+                              }
+                              formik.setFieldValue('video', '');
+                            }}
+                            className="p-1.5 rounded-xl bg-red-600 hover:bg-red-700 text-white shadow-md transition-colors cursor-pointer focus:outline-none"
+                            title="Remove Video"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      </div>
+                      <p className="text-[11px] text-emerald-600 font-medium flex items-center gap-1">
+                        ✓ Video is linked and will be previewed on the product storefront.
+                      </p>
+                    </div>
+                  ) : null}
+
                   <div className="relative">
-                    <div className="relative flex py-2 items-center">
+                    <div className="relative flex py-1 items-center">
                       <div className="flex-grow border-t border-gray-200"></div>
-                      <span className="flex-shrink mx-4 text-gray-400 text-xs font-semibold uppercase tracking-wider">Or Upload Video</span>
+                      <span className="flex-shrink mx-4 text-gray-400 text-xs font-semibold uppercase tracking-wider">
+                        {formik.values.video ? 'Or Replace With Upload' : 'Or Upload Video'}
+                      </span>
                       <div className="flex-grow border-t border-gray-200"></div>
                     </div>
                   </div>
 
-                  <div className="border-2 border-dashed border-gray-200 rounded-2xl p-4 text-center hover:border-indigo-500/50 transition-colors relative bg-gray-50/10 overflow-hidden min-h-[140px] flex flex-col items-center justify-center">
-                    {formik.values.video ? (
-                      <div className="relative w-full h-full group flex flex-col items-center justify-center">
-                        <div className="w-full aspect-video max-h-32 bg-black rounded-lg overflow-hidden border border-gray-150">
-                          {renderVideoPreview(formik.values.video)}
-                        </div>
-                        
-                        <button
-                          type="button"
-                          onClick={async () => {
-                            const url = formik.values.video;
-                            const publicId = getPublicIdFromUrl(url);
-                            if (publicId && accessToken) {
-                              await deleteCloudinaryAsset(publicId, accessToken, 'video');
-                            }
-                            formik.setFieldValue('video', '');
-                          }}
-                          className="absolute top-2 right-2 p-1.5 rounded-full bg-red-600 hover:bg-red-700 text-white shadow-md transition-colors cursor-pointer focus:outline-none z-20"
-                          title="Clear Video"
-                        >
-                          <X size={12} />
-                        </button>
-                      </div>
-                    ) : (
-                      <label className="flex flex-col items-center justify-center cursor-pointer w-full py-4">
-                        <span className="w-10 h-10 rounded-full bg-indigo-50 text-indigo-650 flex items-center justify-center mb-2">
-                          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-                          </svg>
-                        </span>
-                        <span className="text-xs font-semibold text-gray-700">Click to upload product video</span>
-                        <span className="text-[10px] text-gray-400 mt-1">MP4, WebM up to 30MB</span>
-                        <input
-                          type="file"
-                          accept="video/*"
-                          className="hidden"
-                          onChange={(e) => {
-                            if (e.target.files?.[0]) {
-                              handleVideoUpload(e.target.files[0]);
-                            }
-                          }}
-                        />
-                      </label>
-                    )}
+                  <div className="border-2 border-dashed border-gray-200 rounded-2xl p-4 text-center hover:border-indigo-500/50 transition-colors relative bg-gray-50/10 overflow-hidden min-h-[100px] flex flex-col items-center justify-center">
+                    <label className="flex flex-col items-center justify-center cursor-pointer w-full py-2">
+                      <span className="w-9 h-9 rounded-full bg-indigo-50 text-indigo-650 flex items-center justify-center mb-1.5">
+                        <Video size={18} />
+                      </span>
+                      <span className="text-xs font-semibold text-gray-700">Click to upload product video file</span>
+                      <span className="text-[10px] text-gray-400 mt-0.5">MP4, WebM, MOV up to 30MB</span>
+                      <input
+                        type="file"
+                        accept="video/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files?.[0]) {
+                            handleVideoUpload(e.target.files[0]);
+                          }
+                        }}
+                      />
+                    </label>
+
                     {uploadingField === 'video' && (
-                      <div className="absolute inset-0 bg-white/80 flex items-center justify-center z-10">
+                      <div className="absolute inset-0 bg-white/80 backdrop-blur-xs flex items-center justify-center z-10">
                         <div className="w-6 h-6 border-2 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
                       </div>
                     )}
