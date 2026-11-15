@@ -82,7 +82,7 @@ const menuSections: MenuSection[] = [
         defaultPath: '/admin/settings',
         subItems: [
           { label: 'Store Information', path: '/admin/settings', icon: Settings },
-          { label: 'Homepage Banners', path: '/admin/homepage-images', icon: Image },
+          { label: 'Homepage Images', path: '/admin/homepage-images', icon: Image },
           { label: 'API Integrations', path: '/admin/api-metrics', icon: Activity },
           { label: 'Legal Pages', path: '/admin/legal', icon: FileText }
         ]

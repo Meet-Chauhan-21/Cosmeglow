@@ -26,7 +26,7 @@ export const SectionTitle: React.FC<SectionTitleProps> = ({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="inline-block text-xs font-semibold tracking-widest text-secondary uppercase mb-3 font-display"
+          className="inline-block text-[11px] font-bold tracking-widest text-primary uppercase mb-3 font-display px-3.5 py-1 rounded-full bg-primary/10 border border-primary/20 shadow-3xs"
         >
           {badge}
         </motion.span>

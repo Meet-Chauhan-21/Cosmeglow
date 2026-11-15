@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Plus, Edit, Trash2, Folder, AlertTriangle, Eye, EyeOff, Save, X, ArrowUp, ArrowDown, Upload, CheckCircle, Package, LayoutGrid, List } from 'lucide-react';
 import { toast } from 'sonner';
@@ -38,6 +38,10 @@ const CategoriesList: React.FC = () => {
   // Delete Modal States
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
+
+  useEffect(() => {
+    refreshCategories();
+  }, []);
 
   const handleNameChange = (nameVal: string) => {
     const slugVal = nameVal
@@ -129,21 +133,28 @@ const CategoriesList: React.FC = () => {
   };
 
   const handleToggleActive = async (category: any) => {
+    const newStatus = !category.isActive;
+    const catId = category.id || category._id;
     try {
-      const response = await fetch(`${API_BASE_URL}/admin/categories/${category.id || category._id}`, {
+      const response = await fetch(`${API_BASE_URL}/admin/categories/${catId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({ isActive: !category.isActive }),
+        body: JSON.stringify({ isActive: newStatus }),
       });
 
       if (response.ok) {
-        toast.success(`Category ${!category.isActive ? 'enabled' : 'disabled'} successfully.`);
+        toast.success(
+          newStatus
+            ? `Category "${category.name}" is now visible on user side (Shop page).`
+            : `Category "${category.name}" is now hidden from user side.`
+        );
         await refreshCategories();
       } else {
-        toast.error('Failed to toggle status.');
+        const err = await response.json();
+        toast.error(err.message || 'Failed to toggle status.');
       }
     } catch (error) {
       console.error('Error toggling status:', error);
@@ -254,7 +265,7 @@ const CategoriesList: React.FC = () => {
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block font-display">Total Categories</span>
                 <span className="text-2xl font-extrabold text-slate-900 mt-1 block leading-none font-display">{categories.length}</span>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-650 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center">
                 <Folder size={18} />
               </div>
             </div>
@@ -262,11 +273,11 @@ const CategoriesList: React.FC = () => {
             <div className="bg-white border border-slate-200/80 p-4.5 rounded-2xl shadow-3xs text-left hover:shadow-xs transition-all flex items-center justify-between">
               <div>
                 <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 block font-display">Active Channels</span>
-                <span className="text-2xl font-extrabold text-emerald-650 mt-1 block leading-none font-display">
+                <span className="text-2xl font-extrabold text-emerald-600 mt-1 block leading-none font-display">
                   {categories.filter(c => c.isActive).length}
                 </span>
               </div>
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-650 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 flex items-center justify-center">
                 <CheckCircle size={18} />
               </div>
             </div>
@@ -327,7 +338,7 @@ const CategoriesList: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc')}
-                  className="p-2.5 hover:bg-slate-50 border border-slate-200 rounded-xl transition text-slate-650 hover:border-slate-350 cursor-pointer flex items-center justify-center h-9 w-9 focus:outline-none"
+                  className="p-2.5 hover:bg-slate-50 border border-slate-200 rounded-xl transition text-slate-600 hover:border-slate-300 cursor-pointer flex items-center justify-center h-9 w-9 focus:outline-none"
                   title={`Sort Direction: ${sortDirection}`}
                 >
                   {sortDirection === 'asc' ? <ArrowUp size={14} /> : <ArrowDown size={14} />}
@@ -342,7 +353,7 @@ const CategoriesList: React.FC = () => {
                 onClick={() => setViewMode('grid')}
                 className={`p-1.5 rounded-lg transition-all cursor-pointer ${
                   viewMode === 'grid'
-                    ? 'bg-white text-indigo-650 shadow-2xs font-semibold'
+                    ? 'bg-white text-indigo-600 shadow-2xs font-semibold'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
                 title="Grid View"
@@ -354,7 +365,7 @@ const CategoriesList: React.FC = () => {
                 onClick={() => setViewMode('list')}
                 className={`p-1.5 rounded-lg transition-all cursor-pointer ${
                   viewMode === 'list'
-                    ? 'bg-white text-indigo-650 shadow-2xs font-semibold'
+                    ? 'bg-white text-indigo-600 shadow-2xs font-semibold'
                     : 'text-slate-500 hover:text-slate-800'
                 }`}
                 title="List View"
@@ -398,17 +409,17 @@ const CategoriesList: React.FC = () => {
                       className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-103"
                     />
                     
-                    {/* Visual Accents & Status Badges using clean glassmorphic blurs */}
+                    {/* Visual Accents & Status Badges */}
                     {!category.isActive ? (
-                      <div className="absolute inset-0 bg-slate-950/20 backdrop-blur-xs flex items-center justify-center">
-                        <span className="px-3 py-1 bg-rose-600/90 backdrop-blur-xs text-white font-bold text-[9px] rounded-full uppercase tracking-widest shadow-sm flex items-center gap-1">
-                          <EyeOff size={10} /> Disabled
+                      <div className="absolute inset-0 bg-slate-950/30 backdrop-blur-xs flex items-center justify-center">
+                        <span className="px-3 py-1 bg-rose-600/95 backdrop-blur-xs text-white font-bold text-[9px] rounded-full uppercase tracking-widest shadow-sm flex items-center gap-1">
+                          <EyeOff size={10} /> Hidden on User Side
                         </span>
                       </div>
                     ) : (
                       <div className="absolute top-3 left-3">
-                        <span className="px-2.5 py-0.5 bg-emerald-600/90 backdrop-blur-xs text-white font-bold text-[9px] rounded-full uppercase tracking-widest shadow-sm">
-                          Active
+                        <span className="px-2.5 py-0.5 bg-emerald-600/90 backdrop-blur-xs text-white font-bold text-[9px] rounded-full uppercase tracking-widest shadow-sm flex items-center gap-1">
+                          <Eye size={10} /> Visible on Shop
                         </span>
                       </div>
                     )}
@@ -440,31 +451,52 @@ const CategoriesList: React.FC = () => {
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between border-t border-slate-100 pt-3 mt-1">
+                    {/* Dedicated Toggle: Show on User Side */}
+                    <div className="flex items-center justify-between bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-2 mt-1">
+                      <div className="flex flex-col text-left">
+                        <span className="text-[11px] font-bold text-slate-700">
+                          Show on User Side
+                        </span>
+                        <span className={`text-[10px] font-semibold ${category.isActive ? 'text-emerald-600' : 'text-slate-400'}`}>
+                          {category.isActive ? '● Visible on Shop' : '○ Hidden from Shop'}
+                        </span>
+                      </div>
+
+                      {/* Toggle Switch */}
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={category.isActive}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleToggleActive(category);
+                        }}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          category.isActive ? 'bg-emerald-500' : 'bg-slate-300'
+                        }`}
+                        title={category.isActive ? 'Click to hide from user side' : 'Click to show on user side'}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                            category.isActive ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between border-t border-slate-100 pt-3">
                       {/* Products Counter badge */}
                       <span className="text-[10px] font-bold font-sans text-primary bg-primary/5 border border-primary/10 px-3 py-1 rounded-full flex items-center gap-1 shadow-3xs">
                         <Package size={11} className="text-primary" />
                         {category.count || 0} {category.count === 1 ? 'Product' : 'Products'}
                       </span>
 
-                      {/* Quick actions row */}
+                      {/* Action buttons */}
                       <div className="flex items-center gap-1.5">
                         <button
                           type="button"
-                          onClick={() => handleToggleActive(category)}
-                          className={`p-1.5 rounded-lg border transition-all cursor-pointer focus:outline-none ${
-                            category.isActive
-                              ? 'border-slate-200 text-slate-550 hover:text-rose-600 hover:bg-rose-50/20'
-                              : 'border-emerald-200 text-emerald-650 bg-emerald-50/10 hover:bg-emerald-50/30'
-                          }`}
-                          title={category.isActive ? 'Disable Category' : 'Enable Category'}
-                        >
-                          {category.isActive ? <EyeOff size={13} /> : <Eye size={13} />}
-                        </button>
-                        <button
-                          type="button"
                           onClick={() => handleEditTrigger(category)}
-                          className="p-1.5 border border-slate-200 text-slate-550 hover:text-primary hover:border-primary/20 hover:bg-primary/5 rounded-lg transition cursor-pointer focus:outline-none"
+                          className="p-1.5 border border-slate-200 text-slate-500 hover:text-primary hover:border-primary/20 hover:bg-primary/5 rounded-lg transition cursor-pointer focus:outline-none"
                           title="Edit Details"
                         >
                           <Edit size={13} />
@@ -472,7 +504,7 @@ const CategoriesList: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleDeleteTrigger(category.id || category._id || '')}
-                          className="p-1.5 border border-slate-200 text-slate-550 hover:text-rose-600 hover:border-rose-100 hover:bg-rose-50/20 rounded-lg transition cursor-pointer focus:outline-none"
+                          className="p-1.5 border border-slate-200 text-slate-500 hover:text-rose-600 hover:border-rose-100 hover:bg-rose-50/20 rounded-lg transition cursor-pointer focus:outline-none"
                           title="Delete Category"
                         >
                           <Trash2 size={13} />
@@ -494,7 +526,7 @@ const CategoriesList: React.FC = () => {
                   <th className="py-4 px-6">Slug Path</th>
                   <th className="py-4 px-6 text-center">Display Order</th>
                   <th className="py-4 px-6 text-center">Linked Products</th>
-                  <th className="py-4 px-6 text-center">Status</th>
+                  <th className="py-4 px-6 text-center">Show on User Side</th>
                   <th className="py-4 px-6 text-right">Actions</th>
                 </tr>
               </thead>
@@ -541,19 +573,31 @@ const CategoriesList: React.FC = () => {
                       </span>
                     </td>
                     
-                    {/* Status Badge Toggle */}
+                    {/* Status Toggle Switch */}
                     <td className="py-3.5 px-6 text-center">
-                      <button
-                        onClick={() => handleToggleActive(category)}
-                        className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer border focus:outline-none ${
-                          category.isActive
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200/40'
-                            : 'bg-rose-50 text-rose-700 border-rose-200/40'
-                        }`}
-                      >
-                        <span className={`w-1.5 h-1.5 rounded-full ${category.isActive ? 'bg-emerald-500 animate-pulse' : 'bg-rose-550'}`} />
-                        {category.isActive ? 'Active' : 'Disabled'}
-                      </button>
+                      <div className="inline-flex items-center justify-center gap-2.5">
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={category.isActive}
+                          onClick={() => handleToggleActive(category)}
+                          className={`relative inline-flex h-5 w-10 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                            category.isActive ? 'bg-emerald-500' : 'bg-slate-300'
+                          }`}
+                          title={category.isActive ? 'Click to hide from user side' : 'Click to show on user side'}
+                        >
+                          <span
+                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                              category.isActive ? 'translate-x-5' : 'translate-x-0'
+                            }`}
+                          />
+                        </button>
+                        <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                          category.isActive ? 'text-emerald-700' : 'text-slate-400'
+                        }`}>
+                          {category.isActive ? 'Visible' : 'Hidden'}
+                        </span>
+                      </div>
                     </td>
                     
                     {/* Actions */}
@@ -562,7 +606,7 @@ const CategoriesList: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => navigate(`/admin/categories/${category.id || category._id}`)}
-                          className="p-1.5 border border-slate-200 text-slate-550 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition cursor-pointer focus:outline-none"
+                          className="p-1.5 border border-slate-200 text-slate-500 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition cursor-pointer focus:outline-none"
                           title="View Details"
                         >
                           <Folder size={13} />
@@ -570,7 +614,7 @@ const CategoriesList: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleEditTrigger(category)}
-                          className="p-1.5 border border-slate-200 text-slate-550 hover:text-primary hover:border-primary/20 hover:bg-primary/5 rounded-lg transition cursor-pointer focus:outline-none"
+                          className="p-1.5 border border-slate-200 text-slate-500 hover:text-primary hover:border-primary/20 hover:bg-primary/5 rounded-lg transition cursor-pointer focus:outline-none"
                           title="Edit Details"
                         >
                           <Edit size={13} />
@@ -578,7 +622,7 @@ const CategoriesList: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleDeleteTrigger(category.id || category._id || '')}
-                          className="p-1.5 border border-slate-200 text-slate-550 hover:text-rose-600 hover:border-rose-100 hover:bg-rose-550/20 rounded-lg transition cursor-pointer focus:outline-none"
+                          className="p-1.5 border border-slate-200 text-slate-500 hover:text-rose-600 hover:border-rose-100 hover:bg-rose-50/20 rounded-lg transition cursor-pointer focus:outline-none"
                           title="Delete Category"
                         >
                           <Trash2 size={13} />
@@ -719,19 +763,39 @@ const CategoriesList: React.FC = () => {
                     />
                   </div>
 
-                  <div className="flex items-center pt-2">
-                    <label className="flex items-start gap-3 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={formData.isActive}
-                        onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })}
-                        className="w-4.5 h-4.5 text-primary rounded border-slate-300 focus:ring-primary cursor-pointer mt-0.5"
-                      />
-                      <div>
-                        <span className="text-xs font-bold text-slate-700 block">Active Status</span>
-                        <span className="text-[10px] text-slate-400 block mt-0.5 leading-normal">Allow customers to browse and buy products in this category.</span>
+                  {/* Show Category on User Side Toggle */}
+                  <div className="bg-slate-50 border border-slate-200/90 rounded-2xl p-4 transition-all">
+                    <div className="flex items-center justify-between">
+                      <div className="pr-4">
+                        <span className="text-xs font-bold text-slate-800 block font-display">
+                          Show Category on User Side (Shop Page)
+                        </span>
+                        <span className="text-[11px] text-slate-500 block mt-1 leading-normal">
+                          Turn this ON to display this category on the Shop page cards and filter sidebar. Turn OFF to hide it from users.
+                        </span>
                       </div>
-                    </label>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={formData.isActive}
+                        onClick={() => setFormData({ ...formData, isActive: !formData.isActive })}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                          formData.isActive ? 'bg-emerald-500' : 'bg-slate-300'
+                        }`}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                            formData.isActive ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </div>
+                    <div className="mt-2.5 pt-2 border-t border-slate-200/60 flex items-center gap-1.5">
+                      <span className={`w-2 h-2 rounded-full ${formData.isActive ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+                      <span className={`text-[10px] font-semibold ${formData.isActive ? 'text-emerald-700' : 'text-slate-500'}`}>
+                        {formData.isActive ? 'Currently: Will show on user side (Visible)' : 'Currently: Will NOT show on user side (Hidden)'}
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -759,7 +823,7 @@ const CategoriesList: React.FC = () => {
         {/* Delete Confirmation Modal */}
         {deleteModalOpen && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-55 p-4">
-            <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4 border border-gray-150 animate-scale-in">
+            <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center space-y-4 border border-gray-200 animate-scale-in">
               <div className="w-12 h-12 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center mx-auto shadow-inner">
                 <AlertTriangle size={24} />
               </div>
@@ -785,7 +849,7 @@ const CategoriesList: React.FC = () => {
                 <button
                   type="button"
                   onClick={confirmDelete}
-                  className="flex-1 py-2.5 px-4 bg-rose-650 hover:bg-rose-700 text-white font-semibold text-xs rounded-xl transition cursor-pointer focus:outline-none"
+                  className="flex-1 py-2.5 px-4 bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs rounded-xl shadow-xs transition cursor-pointer focus:outline-none"
                 >
                   Delete
                 </button>

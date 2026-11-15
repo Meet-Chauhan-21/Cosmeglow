@@ -161,7 +161,7 @@ export const Register: React.FC = () => {
               
               <div className="relative z-10 h-full flex flex-col justify-between">
                 <div>
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-secondary bg-white/10 px-2.5 py-1 rounded-full inline-block backdrop-blur-xs">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-white/90 bg-white/10 px-2.5 py-1 rounded-full inline-block backdrop-blur-xs">
                     Pure & Clinical
                   </span>
                 </div>
@@ -175,7 +175,7 @@ export const Register: React.FC = () => {
                   </p>
                 </div>
                 
-                <div className="flex items-center gap-2 text-xs text-secondary font-semibold font-display">
+                <div className="flex items-center gap-2 text-xs text-white/90 font-semibold font-display">
                   <ShieldCheck size={14} />
                   <span>Cruelty-Free & Dermatologist Approved</span>
                 </div>

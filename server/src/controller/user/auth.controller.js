@@ -1,4 +1,5 @@
 const User = require('../../models/user.model');
+const Otp = require('../../models/otp.model');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -7,6 +8,7 @@ const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const { generateAccessToken, generateRefreshToken } = require('../../util/token.util');
 const { sendVerificationEmail, sendPasswordResetEmail } = require('../../util/email.util');
 const { validateEmailAddress } = require('../../util/emailValidation.util');
+const { sendOtpSms, verifyOtp, formatPhoneNumber } = require('../../util/twilio.util');
 
 // Helper to generate access and refresh tokens, save refresh token to DB, and set cookie
 const generateTokensAndSetCookie = async (user, res) => {
@@ -748,6 +750,278 @@ const resetPassword = async (req, res) => {
   }
 };
 
+// @desc    Send Phone OTP
+// @route   POST /api/users/send-phone-otp
+// @access  Public
+const sendPhoneOtp = async (req, res) => {
+  try {
+    const { phone } = req.body;
+    if (!phone) {
+      return res.status(400).json({ message: 'Phone number is required.' });
+    }
+
+    const cleanPhone = phone.toString().replace(/\D/g, '').slice(-10);
+    if (cleanPhone.length !== 10) {
+      return res.status(400).json({ message: 'Please enter a valid 10-digit mobile number.' });
+    }
+
+    // Generate random 6-digit OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    // Clean any prior pending OTP for this number
+    await Otp.deleteMany({ phone: cleanPhone });
+
+    // Save newly generated OTP
+    await Otp.create({
+      phone: cleanPhone,
+      otp,
+      expiresAt,
+      verified: false
+    });
+
+    // Send SMS via Twilio
+    const smsResult = await sendOtpSms(cleanPhone, otp);
+
+    return res.status(200).json({
+      success: true,
+      message: 'OTP verification code sent successfully.',
+      phone: cleanPhone,
+      simulated: !!smsResult?.simulated,
+      ...(process.env.NODE_ENV !== 'production' && smsResult?.simulated ? { debugOtp: otp } : {})
+    });
+  } catch (error) {
+    console.error('Send Phone OTP Error:', error);
+    return res.status(500).json({ message: 'Failed to send OTP code. Please try again.' });
+  }
+};
+
+// @desc    Verify Phone OTP & Onboard/Login
+// @route   POST /api/users/verify-phone-otp
+// @access  Public
+const verifyPhoneOtp = async (req, res) => {
+  try {
+    const { phone, otp, name } = req.body;
+
+    if (!phone || !otp) {
+      return res.status(400).json({ message: 'Phone number and OTP code are required.' });
+    }
+
+    const cleanPhone = phone.toString().replace(/\D/g, '').slice(-10);
+    const cleanOtp = otp.toString().trim();
+
+    // Check Twilio Verify API first if configured
+    const twilioCheck = await verifyOtp(cleanPhone, cleanOtp);
+    if (!twilioCheck.useDbCheck) {
+      if (!twilioCheck.valid) {
+        return res.status(400).json({ message: twilioCheck.reason || 'Invalid or expired OTP code.' });
+      }
+    } else {
+      // Fallback to MongoDB Otp check (for dev simulation / Programmable SMS)
+      const otpRecord = await Otp.findOne({
+        phone: cleanPhone,
+        otp: cleanOtp,
+        expiresAt: { $gt: new Date() }
+      });
+
+      if (!otpRecord) {
+        return res.status(400).json({ message: 'Invalid or expired OTP code. Please request a new one.' });
+      }
+    }
+
+    // Mark pending OTP as cleaned
+    await Otp.deleteMany({ phone: cleanPhone });
+
+    // Look for existing user with this phone number (matching last 10 digits)
+    let user = await User.findOne({ phone: { $regex: cleanPhone + '$' } });
+
+    if (user) {
+      // Existing user found -> Log them in!
+      if (name && (!user.name || user.name === 'User')) {
+        user.name = name.trim();
+      }
+      user.isVerified = true;
+      await user.save();
+
+      const { accessToken } = await generateTokensAndSetCookie(user, res);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Login successful via Phone verification.',
+        isNewUser: false,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          addresses: user.addresses || []
+        },
+        accessToken
+      });
+    }
+
+    // New user -> Does caller provide name right now?
+    if (!name || name.trim().length < 2) {
+      // User is verified, but needs to provide name in next onboarding step
+      await Otp.create({
+        phone: cleanPhone,
+        otp: 'VERIFIED',
+        verified: true,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000)
+      });
+
+      return res.status(200).json({
+        success: true,
+        verified: true,
+        isNewUser: true,
+        message: 'Phone verified! Please provide your name to complete setup.',
+        phone: cleanPhone
+      });
+    }
+
+    // Name is provided -> Create new user account immediately
+    user = new User({
+      name: name.trim(),
+      phone: cleanPhone,
+      provider: 'phone',
+      role: 'user',
+      isVerified: true
+    });
+    await user.save();
+
+    // Admin notification
+    try {
+      const Notification = require('../../models/notification.model');
+      await Notification.create({
+        type: 'new_user',
+        title: 'New User Registered (Phone OTP)',
+        message: `${user.name} (${user.phone}) registered via Phone OTP.`,
+        link: `/admin/users/${user._id}`
+      });
+    } catch (notifErr) {
+      console.error('Notification error on phone user creation:', notifErr.message);
+    }
+
+    const { accessToken } = await generateTokensAndSetCookie(user, res);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Account registered and logged in successfully!',
+      isNewUser: true,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        addresses: user.addresses || []
+      },
+      accessToken
+    });
+  } catch (error) {
+    console.error('Verify Phone OTP Error:', error);
+    return res.status(500).json({ message: 'Server error during OTP verification.' });
+  }
+};
+
+// @desc    Complete Phone Onboarding (Name & optional Email)
+// @route   POST /api/users/complete-phone-onboarding
+// @access  Public
+const completePhoneOnboarding = async (req, res) => {
+  try {
+    const { phone, name, email } = req.body;
+
+    if (!phone || !name || name.trim().length < 2) {
+      return res.status(400).json({ message: 'Phone number and valid name (min 2 characters) are required.' });
+    }
+
+    const cleanPhone = phone.toString().replace(/\D/g, '').slice(-10);
+
+    // Verify phone was validated
+    const verifiedOtp = await Otp.findOne({
+      phone: cleanPhone,
+      verified: true,
+      expiresAt: { $gt: new Date() }
+    });
+
+    let user = await User.findOne({ phone: { $regex: cleanPhone + '$' } });
+
+    if (!verifiedOtp && !user) {
+      return res.status(400).json({ message: 'Phone verification expired or invalid. Please verify phone number first.' });
+    }
+
+    // Optional email validation
+    if (email && email.trim()) {
+      const emailCheck = validateEmailAddress(email.trim());
+      if (!emailCheck.valid) {
+        return res.status(400).json({ message: emailCheck.reason });
+      }
+      const emailExists = await User.findOne({ 
+        email: email.trim().toLowerCase(), 
+        _id: user ? { $ne: user._id } : { $exists: true } 
+      });
+      if (emailExists) {
+        return res.status(400).json({ message: 'An account already exists with this email address.' });
+      }
+    }
+
+    if (user) {
+      user.name = name.trim();
+      if (email && email.trim()) {
+        user.email = email.trim().toLowerCase();
+      }
+      user.isVerified = true;
+      await user.save();
+    } else {
+      const userData = {
+        name: name.trim(),
+        phone: cleanPhone,
+        provider: 'phone',
+        role: 'user',
+        isVerified: true
+      };
+      if (email && email.trim()) {
+        userData.email = email.trim().toLowerCase();
+      }
+      user = new User(userData);
+      await user.save();
+
+      try {
+        const Notification = require('../../models/notification.model');
+        await Notification.create({
+          type: 'new_user',
+          title: 'New User Registered (Phone Onboarding)',
+          message: `${user.name} (${user.phone}) registered via Phone Onboarding.`,
+          link: `/admin/users/${user._id}`
+        });
+      } catch (notifErr) {}
+    }
+
+    // Clean up verified OTP tokens
+    await Otp.deleteMany({ phone: cleanPhone });
+
+    const { accessToken } = await generateTokensAndSetCookie(user, res);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Onboarding completed successfully!',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        addresses: user.addresses || []
+      },
+      accessToken
+    });
+  } catch (error) {
+    console.error('Complete Phone Onboarding Error:', error);
+    return res.status(500).json({ message: 'Server error during onboarding completion.' });
+  }
+};
+
 module.exports = {
   registerUser,
   loginUser,
@@ -759,6 +1033,9 @@ module.exports = {
   verifyEmail,
   resendVerification,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  sendPhoneOtp,
+  verifyPhoneOtp,
+  completePhoneOnboarding
 };
 

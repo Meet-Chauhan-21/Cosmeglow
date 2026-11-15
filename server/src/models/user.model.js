@@ -51,8 +51,14 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: [true, 'Email is required'],
+      required: [
+        function() {
+          return this.provider === 'local';
+        },
+        'Email is required'
+      ],
       unique: true,
+      sparse: true,
       lowercase: true,
       trim: true,
       index: true
@@ -70,11 +76,12 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: [
         function() {
-          return this.provider === 'local';
+          return this.provider === 'local' || this.provider === 'phone';
         },
         'Phone number is required'
       ],
-      trim: true
+      trim: true,
+      index: true
     },
     googleId: {
       type: String,
@@ -88,7 +95,7 @@ const userSchema = new mongoose.Schema(
     },
     provider: {
       type: String,
-      enum: ['local', 'google', 'facebook'],
+      enum: ['local', 'google', 'facebook', 'phone'],
       default: 'local'
     },
     role: {

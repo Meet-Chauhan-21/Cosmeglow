@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import SEO from '../components/common/SEO';
 
-import { ArrowLeft, CreditCard, ShieldCheck, ShoppingBag, Truck } from 'lucide-react';
+import { ArrowLeft, CreditCard, ShieldCheck, ShoppingBag, Truck, Phone, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useStore } from '../context/StoreContext';
 import { useAuth } from '../context/AuthContext';
 import { SearchableDropdown } from '../components/layout/SearchableDropdown';
@@ -13,6 +13,7 @@ import Footer from '../components/layout/Footer';
 import Container from '../components/layout/Container';
 import Button from '../components/layout/Button';
 import { PaymentSuccessModal } from '../components/checkout/PaymentSuccessModal';
+import { OtpInput } from '../components/common/OtpInput';
 
 import { API_BASE_URL } from '../config';
 
@@ -69,7 +70,16 @@ const formatWhatsAppMessage = (
 export const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const { cart, clearCart, settings } = useStore();
-  const { user, placeOrder, loading, addAddress, accessToken } = useAuth();
+  const { 
+    user, 
+    placeOrder, 
+    addAddress, 
+    accessToken, 
+    logout,
+    sendPhoneOtp, 
+    verifyPhoneOtp, 
+    completePhoneOnboarding 
+  } = useAuth();
 
   // Load user saved addresses
   const savedAddresses = user?.addresses || [];
@@ -97,6 +107,127 @@ export const Checkout: React.FC = () => {
     zip: ''
   });
 
+  // Phone OTP & Onboarding State for quick verification
+  const [onboardingPhone, setOnboardingPhone] = useState(user?.phone || '');
+  const [onboardingOtp, setOnboardingOtp] = useState('');
+  const [onboardingName, setOnboardingName] = useState(user?.name || '');
+  const [otpStep, setOtpStep] = useState<'phone' | 'otp' | 'name'>('phone');
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isOnboarding, setIsOnboarding] = useState(false);
+  const [otpCooldown, setOtpCooldown] = useState(0);
+  const [simulatedOtpHint, setSimulatedOtpHint] = useState<string | null>(null);
+  const [otpError, setOtpError] = useState<string | null>(null);
+
+  // Sync user details into shipping form and onboarding states when user logs in
+  React.useEffect(() => {
+    if (user) {
+      setNewAddressForm((prev) => ({
+        ...prev,
+        name: prev.name || user.name || '',
+        phone: prev.phone || user.phone || ''
+      }));
+      if (user.phone) setOnboardingPhone(user.phone);
+      if (user.name) setOnboardingName(user.name);
+    }
+  }, [user]);
+
+  // OTP Resend Cooldown Timer
+  React.useEffect(() => {
+    if (otpCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setOtpCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [otpCooldown]);
+
+  const handleSendOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const clean = onboardingPhone.replace(/\D/g, '');
+    if (clean.length !== 10) {
+      toast.error('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    if (!/^[6-9]/.test(clean)) {
+      toast.error('Mobile number should start with 6, 7, 8, or 9.');
+      return;
+    }
+
+    // Clean previously entered OTP and hint so boxes start fresh for each number
+    setOnboardingOtp('');
+    setSimulatedOtpHint(null);
+    setOtpError(null);
+    setIsSendingOtp(true);
+    try {
+      const res = await sendPhoneOtp(clean);
+      setIsSendingOtp(false);
+
+      if (res.success) {
+        setOtpStep('otp');
+        setOtpCooldown(30);
+        if (res.debugOtp) {
+          setSimulatedOtpHint(res.debugOtp);
+        }
+      }
+    } catch (err) {
+      setIsSendingOtp(false);
+      toast.error('Failed to send OTP code.');
+    }
+  };
+
+  const handleVerifyOtp = async (e?: React.FormEvent, codeOverride?: string) => {
+    if (e) e.preventDefault();
+    const cleanOtp = (codeOverride || onboardingOtp).trim();
+    if (cleanOtp.length !== 6) {
+      setOtpError('Please enter the 6-digit OTP code.');
+      return;
+    }
+
+    setOtpError(null);
+    setIsVerifyingOtp(true);
+    try {
+      const res = await verifyPhoneOtp(onboardingPhone, cleanOtp);
+      setIsVerifyingOtp(false);
+
+      if (res.success) {
+        setOtpError(null);
+        if (res.isNewUser) {
+          // New user whose phone is verified: show name collection onboarding
+          setOtpStep('name');
+        } else {
+          // Existing user logged in
+          toast.success('Mobile verified and logged in successfully!');
+        }
+      } else {
+        setOtpError(res.message || 'Invalid or expired OTP code. Please check and try again.');
+      }
+    } catch (err: any) {
+      setIsVerifyingOtp(false);
+      setOtpError(err?.message || 'OTP verification failed. Please try again.');
+    }
+  };
+
+  const handleCompleteOnboarding = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!onboardingName.trim() || onboardingName.trim().length < 2) {
+      toast.error('Please enter your full name (minimum 2 characters).');
+      return;
+    }
+
+    setIsOnboarding(true);
+    try {
+      const res = await completePhoneOnboarding(onboardingPhone, onboardingName);
+      setIsOnboarding(false);
+
+      if (res.success) {
+        toast.success(`Welcome to CosmeGlow, ${onboardingName}!`);
+      }
+    } catch (err) {
+      setIsOnboarding(false);
+      toast.error('Onboarding failed. Please try again.');
+    }
+  };
+
   const [addressErrors, setAddressErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
 
@@ -120,12 +251,6 @@ export const Checkout: React.FC = () => {
     const zipClean = form.zip.replace(/\D/g, '');
     if (!zipClean || zipClean.length !== 6) {
       errs.zip = 'ZIP / Pincode must be exactly 6 digits';
-    }
-    const phoneClean = form.phone.replace(/\D/g, '');
-    if (!phoneClean || phoneClean.length !== 10) {
-      errs.phone = 'Mobile phone number must be exactly 10 digits';
-    } else if (!/^[6-9]/.test(phoneClean)) {
-      errs.phone = 'Please enter a valid 10-digit mobile number starting with 6-9';
     }
     return errs;
   };
@@ -156,15 +281,6 @@ export const Checkout: React.FC = () => {
       setPaymentMethod('cod');
     }
   }, [isRazorpayEnabled, isCODEnabled]);
-
-  // Orders are created server-side and require auth
-  React.useEffect(() => {
-    if (loading) return;
-    if (!user && !orderPlaced) {
-      toast.error('Please sign in to place an order.');
-      navigate('/login', { state: { from: '/checkout' } });
-    }
-  }, [user, loading, navigate, orderPlaced]);
 
   // Cart values
   const subtotal = cart.reduce((sum, item) => sum + item.product.price * item.quantity, 0);
@@ -267,6 +383,14 @@ export const Checkout: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Auth Validation - Ensure user is verified via Phone OTP
+    if (!user) {
+      toast.error('Please verify your mobile number in Section 1 to proceed with checkout.');
+      const elem = document.getElementById('checkout-auth-card');
+      if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+
     // Address Validation
     if (useNewAddress) {
       const errs = validateAddressForm();
@@ -277,8 +401,7 @@ export const Checkout: React.FC = () => {
         country: true,
         state: true,
         district: true,
-        zip: true,
-        phone: true
+        zip: true
       });
 
       const firstErrMsg = Object.values(errs)[0];
@@ -301,10 +424,12 @@ export const Checkout: React.FC = () => {
       return;
     }
 
+    const finalPhone = (useNewAddress ? newAddressForm.phone : selectedSavedAddress?.phone) || onboardingPhone || user?.phone || '';
+
     const shippingAddress = useNewAddress
       ? {
           name: newAddressForm.name,
-          phone: newAddressForm.phone,
+          phone: finalPhone,
           street: newAddressForm.street,
           country: newAddressForm.country,
           state: newAddressForm.state,
@@ -461,7 +586,7 @@ export const Checkout: React.FC = () => {
 
       <Navbar />
 
-      <main className="pt-28 pb-20 bg-light-gray/30 min-h-screen">
+      <main className="pt-6 sm:pt-8 pb-20 bg-light-gray/30 min-h-screen">
         <Container>
           
           <Link
@@ -487,12 +612,234 @@ export const Checkout: React.FC = () => {
             {/* Left: Shipping & Payment Form */}
             <form onSubmit={handleSubmit} className="lg:col-span-7 space-y-6">
               
-              {/* Step 1: Shipping Address */}
+              {/* Step 1: Customer Contact & Mobile Verification */}
+              <div id="checkout-auth-card" className="bg-white border border-border-gray/30 rounded-3xl p-6 sm:p-8 shadow-xs space-y-5">
+                <div className="flex items-center gap-2 border-b border-border-gray/40 pb-4 justify-between flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <Phone size={18} className="text-primary" />
+                    <h2 className="text-base font-display font-semibold text-dark">
+                      1. Contact & Mobile Verification
+                    </h2>
+                  </div>
+                  {user ? (
+                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2.5 py-0.5 rounded-full">
+                      <CheckCircle2 size={13} className="text-emerald-600" />
+                      Verified
+                    </span>
+                  ) : (
+                    <Link
+                      to="/login"
+                      state={{ from: '/checkout' }}
+                      className="text-xs font-semibold font-display text-primary hover:text-primary-light transition-colors"
+                    >
+                      Already have an account? Sign In
+                    </Link>
+                  )}
+                </div>
+
+                {user ? (
+                  // Logged In Status Card
+                  <div className="bg-emerald-50/50 border border-emerald-200/60 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold font-display text-sm shrink-0">
+                        {user.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <div className="font-semibold text-dark text-sm flex items-center gap-1.5">
+                          <span>{user.name}</span>
+                          <span className="text-[10px] text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded font-sans font-medium">Verified Customer</span>
+                        </div>
+                        <div className="text-gray-500 font-sans mt-0.5">
+                          {user.phone ? `+91 ${user.phone}` : user.email}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => logout()}
+                      className="text-[11px] font-medium text-gray-500 hover:text-rose-600 underline cursor-pointer self-end sm:self-auto"
+                    >
+                      Use a different account
+                    </button>
+                  </div>
+                ) : (
+                  // Onboarding & Verification Forms (Flutter & Mobile-App Style)
+                  <div className="space-y-4 text-left">
+                    {otpStep === 'phone' && (
+                      <div className="space-y-4 pt-1">
+                        <div>
+                          <label className="text-xs font-bold text-gray-700 font-display block mb-1.5 uppercase tracking-wider">
+                            Mobile Phone Number <span className="text-rose-500">*</span>
+                          </label>
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center justify-center bg-gray-50 border border-gray-200 px-4 h-12 rounded-xl text-sm font-bold text-dark font-display select-none shrink-0 shadow-xs min-w-[64px]">
+                              +91
+                            </div>
+                            <input
+                              type="tel"
+                              inputMode="numeric"
+                              pattern="[0-9]*"
+                              value={onboardingPhone}
+                              onChange={(e) => {
+                                setOnboardingPhone(e.target.value.replace(/\D/g, '').slice(0, 10));
+                                setOnboardingOtp('');
+                                setSimulatedOtpHint(null);
+                                setOtpError(null);
+                              }}
+                              placeholder="Enter 10-digit mobile number"
+                              maxLength={10}
+                              className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 h-12 text-sm sm:text-base font-semibold text-dark placeholder:text-gray-400 placeholder:font-normal focus:bg-white focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-sans"
+                            />
+                          </div>
+                        </div>
+
+                        <Button
+                          type="button"
+                          variant="primary"
+                          onClick={handleSendOtp}
+                          disabled={isSendingOtp || onboardingPhone.replace(/\D/g, '').length !== 10}
+                          className="w-full h-12 text-xs font-bold uppercase tracking-wider rounded-xl shadow-md hover:shadow-lg active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          {isSendingOtp ? 'Sending Verification Code...' : 'Get OTP on Phone'}
+                        </Button>
+                      </div>
+                    )}
+
+                    {otpStep === 'otp' && (
+                      <div className="space-y-4 pt-1">
+                        {/* Mobile-App Clean Phone Info Pill */}
+                        <div className="flex items-center justify-between bg-primary/[0.04] border border-primary/15 rounded-xl px-3.5 py-2.5 text-xs">
+                          <div className="flex items-center gap-2 truncate">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
+                            <span className="text-gray-600 font-sans truncate">
+                              OTP sent to <strong className="text-dark font-mono">+91 {onboardingPhone}</strong>
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setOtpStep('phone');
+                              setOnboardingOtp('');
+                              setSimulatedOtpHint(null);
+                            }}
+                            className="text-primary hover:text-primary-dark font-bold text-xs cursor-pointer hover:underline shrink-0 ml-2"
+                          >
+                            Edit
+                          </button>
+                        </div>
+
+                        {simulatedOtpHint && (
+                          <div className="bg-amber-50 border border-amber-200 text-amber-800 text-[11px] p-2.5 rounded-xl flex items-center justify-between">
+                            <span>Development Mode OTP: <strong>{simulatedOtpHint}</strong></span>
+                            <button
+                              type="button"
+                              onClick={() => setOnboardingOtp(simulatedOtpHint)}
+                              className="text-amber-900 underline font-semibold text-[10px] cursor-pointer"
+                            >
+                              Auto Fill
+                            </button>
+                          </div>
+                        )}
+
+                        {/* Flutter-style Centered 6-Box OTP Input */}
+                        <div className="text-center pt-1">
+                          <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider block mb-2 font-display">
+                            Enter 6-Digit OTP Code
+                          </span>
+                          <OtpInput
+                            value={onboardingOtp}
+                            onChange={(val) => {
+                              setOnboardingOtp(val);
+                              if (otpError) setOtpError(null);
+                            }}
+                            onComplete={(val) => {
+                              handleVerifyOtp(undefined, val);
+                            }}
+                            hasError={!!otpError}
+                            disabled={isVerifyingOtp}
+                          />
+                          {otpError && (
+                            <div className="flex items-center justify-center gap-1.5 text-rose-600 text-xs font-semibold pt-2">
+                              <AlertCircle size={14} className="shrink-0 text-rose-500" />
+                              <span>{otpError}</span>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Resend OTP Timer Row */}
+                        <div className="flex items-center justify-center text-xs pt-1">
+                          {otpCooldown > 0 ? (
+                            <span className="text-gray-400 font-sans">
+                              Resend OTP in <strong className="font-mono text-dark">{otpCooldown}s</strong>
+                            </span>
+                          ) : (
+                            <button
+                              type="button"
+                              disabled={isSendingOtp}
+                              onClick={handleSendOtp}
+                              className="text-primary hover:text-primary-dark font-bold font-display cursor-pointer hover:underline"
+                            >
+                              {isSendingOtp ? 'Sending...' : 'Resend OTP via SMS'}
+                            </button>
+                          )}
+                        </div>
+
+                        {/* Verify & Continue Button */}
+                        <Button
+                          type="button"
+                          variant="primary"
+                          onClick={() => handleVerifyOtp()}
+                          disabled={isVerifyingOtp || onboardingOtp.length !== 6}
+                          className="w-full h-12 text-xs font-bold uppercase tracking-wider rounded-xl shadow-md hover:shadow-lg active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                        >
+                          {isVerifyingOtp ? 'Verifying Code...' : 'Verify OTP & Continue'}
+                        </Button>
+                      </div>
+                    )}
+
+                    {otpStep === 'name' && (
+                      <div className="space-y-4 pt-1">
+                        <div className="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 flex items-center gap-2.5 text-xs text-emerald-800">
+                          <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center font-bold text-[10px] shrink-0">✓</span>
+                          <span>Mobile number <strong>+91 {onboardingPhone}</strong> verified successfully!</span>
+                        </div>
+
+                        <div className="space-y-3">
+                          <div>
+                            <label className="text-xs font-bold text-gray-700 font-display block mb-1.5 uppercase tracking-wider">
+                              Full Name <span className="text-rose-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={onboardingName}
+                              onChange={(e) => setOnboardingName(e.target.value)}
+                              placeholder="Enter your full name"
+                              className="w-full bg-gray-50/50 border border-gray-200 rounded-xl px-4 h-12 text-sm font-semibold text-dark placeholder:text-gray-400 placeholder:font-normal focus:bg-white focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all font-sans"
+                            />
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="primary"
+                            onClick={handleCompleteOnboarding}
+                            disabled={isOnboarding || onboardingName.trim().length < 2}
+                            className="w-full h-12 text-xs font-bold uppercase tracking-wider rounded-xl shadow-md hover:shadow-lg active:scale-[0.99] transition-all flex items-center justify-center gap-2 cursor-pointer"
+                          >
+                            {isOnboarding ? 'Saving Profile...' : 'Continue to Shipping Address'}
+                          </Button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Step 2: Shipping Logistics Address */}
               <div className="bg-white border border-border-gray/30 rounded-3xl p-6 sm:p-8 shadow-xs space-y-5">
                 <div className="flex items-center gap-2 border-b border-border-gray/40 pb-4 justify-between flex-wrap">
                   <div className="flex items-center gap-2">
                     <Truck size={18} className="text-primary" />
-                    <h2 className="text-base font-display font-semibold text-dark">Shipping Logistics Address</h2>
+                    <h2 className="text-base font-display font-semibold text-dark">2. Shipping Logistics Address</h2>
                   </div>
                   {savedAddresses.length > 0 && (
                     <button
@@ -555,7 +902,9 @@ export const Checkout: React.FC = () => {
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="space-y-1.5 sm:col-span-2">
-                        <label className="text-xs font-semibold text-dark/70 font-display">Recipient Full Name *</label>
+                        <label className="text-xs font-semibold text-dark/70 font-display block">
+                          Recipient Full Name <span className="text-rose-500">*</span>
+                        </label>
                         <input
                           type="text"
                           required
@@ -579,7 +928,9 @@ export const Checkout: React.FC = () => {
                       </div>
 
                       <div className="space-y-1.5 sm:col-span-2">
-                        <label className="text-xs font-semibold text-dark/70 font-display">Street Address *</label>
+                        <label className="text-xs font-semibold text-dark/70 font-display block">
+                          Street Address <span className="text-rose-500">*</span>
+                        </label>
                         <input
                           type="text"
                           required
@@ -657,8 +1008,10 @@ export const Checkout: React.FC = () => {
                         </div>
                       </div>
 
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-dark/70 font-display">ZIP / Postal Code *</label>
+                      <div className="space-y-1.5 sm:col-span-2">
+                        <label className="text-xs font-semibold text-dark/70 font-display block">
+                          ZIP / Postal Code <span className="text-rose-500">*</span>
+                        </label>
                         <input
                           type="text"
                           required
@@ -684,44 +1037,16 @@ export const Checkout: React.FC = () => {
                           <span className="text-[10px] text-red-500 font-medium font-sans mt-1 block">{addressErrors.zip}</span>
                         )}
                       </div>
-
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-dark/70 font-display">Mobile Phone Number *</label>
-                        <input
-                          type="text"
-                          required
-                          placeholder="Enter 10-digit mobile number"
-                          value={newAddressForm.phone}
-                          onBlur={() => handleBlurField('phone')}
-                          onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, '');
-                            if (val.length <= 10) {
-                              const updated = { ...newAddressForm, phone: val };
-                              setNewAddressForm(updated);
-                              if (touchedFields.phone) setAddressErrors(validateAddressForm(updated));
-                            }
-                          }}
-                          maxLength={10}
-                          className={`w-full border px-4 py-3 text-sm rounded-xl text-dark focus:outline-none font-sans bg-light-gray/10 transition-colors ${
-                            touchedFields.phone && addressErrors.phone
-                              ? 'border-red-500 focus:border-red-500'
-                              : 'border-border-gray/80 focus:border-primary'
-                          }`}
-                        />
-                        {touchedFields.phone && addressErrors.phone && (
-                          <span className="text-[10px] text-red-500 font-medium font-sans mt-1 block">{addressErrors.phone}</span>
-                        )}
-                      </div>
                     </div>
                   </div>
                 )}
               </div>
 
-              {/* Step 2: Payment Details */}
+              {/* Step 3: Payment Details */}
               <div className="bg-white border border-border-gray/30 rounded-3xl p-6 sm:p-8 shadow-xs space-y-6">
                 <div className="flex items-center gap-2 border-b border-border-gray/40 pb-4">
                   <CreditCard size={18} className="text-primary" />
-                  <h2 className="text-base font-display font-semibold text-dark">Payment Method</h2>
+                  <h2 className="text-base font-display font-semibold text-dark">3. Payment Method</h2>
                 </div>
 
                 {/* Payment Mode Selector */}

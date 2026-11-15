@@ -95,6 +95,22 @@ const productSchema = new mongoose.Schema(
     video: {
       type: String,
       default: ''
+    },
+    descriptionBanners: {
+      type: [String],
+      default: []
+    },
+    directionOfUse: {
+      type: String,
+      default: ''
+    },
+    additionalInfo: {
+      type: String,
+      default: ''
+    },
+    whyLoveIt: {
+      type: [String],
+      default: []
     }
   },
   {

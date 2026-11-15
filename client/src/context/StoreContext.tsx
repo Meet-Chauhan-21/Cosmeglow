@@ -26,6 +26,7 @@ interface StoreContextType {
   setIsWishlistOpen: (open: boolean) => void;
   updateLocalSettings: (newSettings: AppSettings) => void;
   refreshCategories: () => Promise<void>;
+  refreshProducts: () => Promise<void>;
 }
 
 const StoreContext = createContext<StoreContextType | undefined>(undefined);
@@ -40,7 +41,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [productsLoading, setProductsLoading] = useState(true);
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesLoading, setCategoriesLoading] = useState(false);
 
   const [wishlist, setWishlist] = useState<Product[]>(() => {
     const saved = localStorage.getItem('cosmeglow_wishlist');
@@ -83,11 +84,12 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       enableFreeDeliveryThreshold: false,
       freeDeliveryThreshold: 500,
       banners: [
-        'https://images.unsplash.com/photo-1608248597279-f99d160bfcbc?q=80&w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1556228720-195a672e8a03?q=80&w=1200&auto=format&fit=crop',
-        'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?q=80&w=1200&auto=format&fit=crop'
+        'https://res.cloudinary.com/dbmisckko/image/upload/v1794590948/CosmeGlow/products/apc1slzhyg5zmjquzzvs.jpg',
+        'https://res.cloudinary.com/dbmisckko/image/upload/v1794591190/CosmeGlow/products/ynqcajjm5mt0cgcpmojd.jpg',
+        'https://res.cloudinary.com/dbmisckko/image/upload/v1794590976/CosmeGlow/products/hiehoh5hjsozlxjtkis7.jpg'
       ],
       homepageImages: {
+        spotlightProductId: '',
         spotlight: 'https://images.unsplash.com/photo-1617897903246-719242758050?q=80&w=800&auto=format&fit=crop',
         spotlightName: 'Restorative Peptide Serum',
         spotlightDescription: 'A concentrated multi-peptide serum designed to target visible signs of aging, restore firmness, and deeply hydrate the skin.',
@@ -101,11 +103,26 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     };
   });
 
+  const normalizeSettings = (raw: AppSettings): AppSettings => {
+    const shopBanners = Array.isArray(raw.shopBanners)
+      ? raw.shopBanners.filter(Boolean)
+      : raw.shopBanner
+        ? [raw.shopBanner]
+        : [];
+    return {
+      ...raw,
+      banners: Array.isArray(raw.banners) ? raw.banners.filter(Boolean) : [],
+      shopBanners,
+      shopBanner: raw.shopBanner || shopBanners[0] || '',
+    };
+  };
+
   const updateLocalSettings = (newSettings: AppSettings) => {
-    setSettings(newSettings);
-    applyThemeColor(newSettings.themeColor);
+    const next = normalizeSettings(newSettings);
+    setSettings(next);
+    applyThemeColor(next.themeColor);
     try {
-      localStorage.setItem('cosmeglow_settings', JSON.stringify(newSettings));
+      localStorage.setItem('cosmeglow_settings', JSON.stringify(next));
     } catch (e) {
       console.error(e);
     }
@@ -143,6 +160,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   };
 
   const refreshCategories = async () => {
+    setCategoriesLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/categories`);
       if (response.ok) {
@@ -156,19 +174,41 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   };
 
+  const refreshProducts = async () => {
+    try {
+      const apiProducts = await fetchPublicProducts();
+      setProducts(apiProducts);
+    } catch (error) {
+      console.error('Failed to load products:', error);
+    } finally {
+      setProductsLoading(false);
+    }
+  };
+
   useEffect(() => {
     const fetchSettings = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/settings`);
         if (response.ok) {
           const data = await response.json();
-          setSettings(data);
-          applyThemeColor(data.themeColor);
+          const next = normalizeSettings(data);
+          setSettings(next);
+          applyThemeColor(next.themeColor);
           try {
-            localStorage.setItem('cosmeglow_settings', JSON.stringify(data));
+            localStorage.setItem('cosmeglow_settings', JSON.stringify(next));
           } catch (e) {
             console.error(e);
           }
+
+          const bannerUrls = [
+            ...(next.banners || []),
+            ...(next.shopBanners || []),
+            next.shopBanner,
+          ].filter(Boolean) as string[];
+          bannerUrls.forEach((url: string) => {
+            const img = new Image();
+            img.src = url;
+          });
         }
       } catch (err) {
         console.error('Error fetching global settings:', err);
@@ -325,6 +365,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         setIsWishlistOpen,
         updateLocalSettings,
         refreshCategories,
+        refreshProducts,
       }}
     >
       {children}

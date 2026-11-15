@@ -1,18 +1,21 @@
+import React, { lazy, Suspense } from 'react';
 import SEO from '../components/common/SEO';
 import Navbar from '../components/layout/Navbar';
-import Hero from '../components/home/Hero';
-import PromoBanner from '../components/home/PromoBanner';
-import Categories from '../components/home/Categories';
-import BannerCarousel from '../components/home/BannerCarousel';
-import FeaturedProducts from '../components/home/FeaturedProducts';
-import BestSeller from '../components/home/BestSeller';
-import WhyChooseUs from '../components/home/WhyChooseUs';
-import Testimonials from '../components/home/Testimonials';
-import Newsletter from '../components/home/Newsletter';
+import SliderBanner from '../components/home/SliderBanner';
+import ProductBlock from '../components/home/ProductBlock';
 import Footer from '../components/layout/Footer';
 import WhatsAppButton from '../components/layout/WhatsAppButton';
+import { SectionSkeleton } from '../components/common/Skeletons';
 
-export const Home: React.FC = () => {
+const WhyChooseUs = lazy(() => import('../components/home/WhyChooseUs'));
+const Testimonials = lazy(() => import('../components/home/Testimonials'));
+const Newsletter = lazy(() => import('../components/home/Newsletter'));
+
+interface HomeProps {
+  isActive?: boolean;
+}
+
+export const Home: React.FC<HomeProps> = ({ isActive = true }) => {
   const websiteSchema = {
     '@context': 'https://schema.org',
     '@type': 'WebSite',
@@ -37,25 +40,33 @@ export const Home: React.FC = () => {
 
   return (
     <>
-      <SEO
-        title="CosmeGlow — Organic Botanical Skincare & Cellular Restoration"
-        description="Unlock your skin's biological potential with CosmeGlow's luxury organic, cruelty-free botanical skincare formulas. Formulated for deep moisture, collagen restoration, and natural glow."
-        keywords="cosmeglow, cosmeglow skincare, botanical skincare India, organic face serum, collagen serum, natural glow cream, vegan skincare brand, anti aging cream India, clear skin formula"
-        jsonLd={[websiteSchema, storeSchema]}
-      />
+      {isActive && (
+        <SEO
+          title="CosmeGlow — Organic Botanical Skincare & Cellular Restoration"
+          description="Unlock your skin's biological potential with CosmeGlow's luxury organic, cruelty-free botanical skincare formulas. Formulated for deep moisture, collagen restoration, and natural glow."
+          keywords="cosmeglow, cosmeglow skincare, botanical skincare India, organic face serum, collagen serum, natural glow cream, vegan skincare brand, anti aging cream India, clear skin formula"
+          jsonLd={[websiteSchema, storeSchema]}
+        />
+      )}
 
       <Navbar />
       <main>
-        <Hero />
-        <PromoBanner />
-        <BannerCarousel />
-        <Categories />
-        <FeaturedProducts />
-        <BestSeller />
-        <WhyChooseUs />
-        <Testimonials />
-        <Newsletter />
+        <SliderBanner />
+        <ProductBlock />
+
+        <Suspense fallback={<SectionSkeleton />}>
+          <WhyChooseUs />
+        </Suspense>
+
+        <Suspense fallback={<SectionSkeleton />}>
+          <Testimonials />
+        </Suspense>
+
+        <Suspense fallback={<SectionSkeleton />}>
+          <Newsletter />
+        </Suspense>
       </main>
+
       <WhatsAppButton />
       <Footer />
     </>

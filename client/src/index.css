@@ -4,7 +4,7 @@
   --color-primary: #581C87;
   --color-primary-light: #9333EA;
   --color-primary-dark: #3B0764;
-  --color-secondary: #16A34A;
+  --color-secondary: #7C3AED;
   --color-coffee: #6F4E37;
   --color-coffee-dark: #3E2723;
   --color-coffee-light: #8B5A2B;
@@ -19,33 +19,9 @@
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
   --font-display: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
-  
-  --animate-float: float 6s ease-in-out infinite;
-  --animate-fade-in-up: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-}
-
-@keyframes float {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 html {
-  scroll-behavior: smooth;
   background-color: #FFFFFF;
   color: #111111;
 }
@@ -97,6 +73,15 @@ body {
 .custom-scrollbar::-webkit-scrollbar {
   width: 5px;
   height: 5px;
+}
+
+/* Hide scrollbar but allow scrolling */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import SEO from '../components/common/SEO';
-import { Mail, Lock, ArrowRight, Sparkles, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, Sparkles, Eye, EyeOff, ShieldCheck, Phone } from 'lucide-react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +10,8 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import Container from '../components/layout/Container';
 import Button from '../components/layout/Button';
+import { OtpInput } from '../components/common/OtpInput';
+import { toast } from 'sonner';
 
 import { validateEmailAddress } from '../util/emailValidation';
 
@@ -31,10 +33,116 @@ const loginSchema = Yup.object().shape({
 export const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, facebookLogin, facebookRegister, user, resendVerification, forgotPassword } = useAuth();
+  const { 
+    login, 
+    facebookLogin, 
+    facebookRegister, 
+    user, 
+    resendVerification, 
+    forgotPassword,
+    sendPhoneOtp,
+    verifyPhoneOtp,
+    completePhoneOnboarding
+  } = useAuth();
   
+  const [loginMode, setLoginMode] = useState<'otp' | 'password'>('otp');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Phone OTP States
+  const [otpPhone, setOtpPhone] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [otpName, setOtpName] = useState('');
+  const [otpEmail, setOtpEmail] = useState('');
+  const [otpStep, setOtpStep] = useState<'phone' | 'otp' | 'name'>('phone');
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isOnboarding, setIsOnboarding] = useState(false);
+  const [otpCooldown, setOtpCooldown] = useState(0);
+  const [simulatedOtpHint, setSimulatedOtpHint] = useState<string | null>(null);
+
+  // OTP Countdown
+  React.useEffect(() => {
+    if (otpCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setOtpCooldown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [otpCooldown]);
+
+  const handleSendPhoneOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const clean = otpPhone.replace(/\D/g, '');
+    if (clean.length !== 10) {
+      toast.error('Please enter a valid 10-digit mobile number.');
+      return;
+    }
+    if (!/^[6-9]/.test(clean)) {
+      toast.error('Mobile number should start with 6, 7, 8, or 9.');
+      return;
+    }
+
+    setIsSendingOtp(true);
+    try {
+      const res = await sendPhoneOtp(clean);
+      setIsSendingOtp(false);
+      if (res.success) {
+        setOtpStep('otp');
+        setOtpCooldown(30);
+        if (res.debugOtp) {
+          setSimulatedOtpHint(res.debugOtp);
+        }
+      }
+    } catch (err) {
+      setIsSendingOtp(false);
+      toast.error('Failed to send OTP code.');
+    }
+  };
+
+  const handleVerifyPhoneOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const cleanOtp = otpCode.trim();
+    if (cleanOtp.length !== 6) {
+      toast.error('Please enter the 6-digit OTP code.');
+      return;
+    }
+
+    setIsVerifyingOtp(true);
+    try {
+      const res = await verifyPhoneOtp(otpPhone, cleanOtp);
+      setIsVerifyingOtp(false);
+      if (res.success) {
+        if (res.isNewUser) {
+          setOtpStep('name');
+        } else {
+          toast.success('Logged in successfully!');
+        }
+      }
+    } catch (err) {
+      setIsVerifyingOtp(false);
+      toast.error('OTP verification failed.');
+    }
+  };
+
+  const handleCompletePhoneOnboarding = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!otpName.trim() || otpName.trim().length < 2) {
+      toast.error('Please enter your full name (minimum 2 characters).');
+      return;
+    }
+
+    setIsOnboarding(true);
+    try {
+      const res = await completePhoneOnboarding(otpPhone, otpName, otpEmail);
+      setIsOnboarding(false);
+      if (res.success) {
+        toast.success(`Welcome to CosmeGlow, ${otpName}!`);
+      }
+    } catch (err) {
+      setIsOnboarding(false);
+      toast.error('Onboarding failed. Please try again.');
+    }
+  };
 
   // Forgot password modal state
   const [showForgotPassword, setShowForgotPassword] = useState(false);
@@ -187,7 +295,7 @@ export const Login: React.FC = () => {
 
       <Navbar />
 
-      <main className="pt-24 pb-20 min-h-screen bg-light-gray/30 flex items-center">
+      <main className="py-6 sm:py-10 min-h-[calc(100vh-4.5rem)] bg-light-gray/30 flex items-center">
         <Container className="py-8">
           <div className="max-w-5xl mx-auto bg-white rounded-3xl overflow-hidden shadow-xl border border-border-gray/30 grid grid-cols-1 md:grid-cols-12 min-h-[580px]">
             
@@ -204,7 +312,7 @@ export const Login: React.FC = () => {
               
               <div className="relative z-10 h-full flex flex-col justify-between">
                 <div>
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-secondary bg-white/10 px-2.5 py-1 rounded-full inline-block backdrop-blur-xs">
+                  <span className="text-[10px] uppercase font-bold tracking-widest text-white/90 bg-white/10 px-2.5 py-1 rounded-full inline-block backdrop-blur-xs">
                     Natural Actives
                   </span>
                 </div>
@@ -218,7 +326,7 @@ export const Login: React.FC = () => {
                   </p>
                 </div>
                 
-                <div className="flex items-center gap-2 text-xs text-secondary font-semibold font-display">
+                <div className="flex items-center gap-2 text-xs text-white/90 font-semibold font-display">
                   <Sparkles size={14} />
                   <span>CosmeGlow Gold Circle Benefits</span>
                 </div>
@@ -408,101 +516,286 @@ export const Login: React.FC = () => {
                   </div>
                 ) : (
                   <>
-                    <form onSubmit={formik.handleSubmit} className="space-y-4">
-                      {/* Email input */}
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-semibold text-dark/70 font-display flex items-center gap-1.5">
-                          <Mail size={13} className="text-gray-400" />
-                          <span>Email Address</span>
-                        </label>
-                        <input
-                          type="email"
-                          name="email"
-                          placeholder="name@example.com"
-                          value={formik.values.email}
-                          onChange={formik.handleChange}
-                          onBlur={formik.handleBlur}
-                          className={`w-full border px-4 py-3 text-sm rounded-xl text-dark focus:outline-none focus:border-primary font-sans bg-light-gray/20 transition-colors ${
-                            formik.touched.email && formik.errors.email
-                              ? 'border-red-500 focus:border-red-500'
-                              : 'border-border-gray/80'
-                          }`}
-                        />
-                        {formik.touched.email && formik.errors.email && (
-                          <div className="text-[10px] text-red-500 font-sans font-medium mt-1">
-                            {String(formik.errors.email)}
+                    {/* Login Mode Toggle Tabs */}
+                    <div className="flex p-1 bg-light-gray rounded-2xl border border-border-gray/50 mb-6">
+                      <button
+                        type="button"
+                        onClick={() => setLoginMode('otp')}
+                        className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                          loginMode === 'otp'
+                            ? 'bg-white text-dark shadow-xs'
+                            : 'text-gray-500 hover:text-dark'
+                        }`}
+                      >
+                        <Phone size={13} className="text-primary" />
+                        <span>Mobile OTP</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setLoginMode('password')}
+                        className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 ${
+                          loginMode === 'password'
+                            ? 'bg-white text-dark shadow-xs'
+                            : 'text-gray-500 hover:text-dark'
+                        }`}
+                      >
+                        <Mail size={13} className="text-primary" />
+                        <span>Email & Password</span>
+                      </button>
+                    </div>
+
+                    {loginMode === 'otp' ? (
+                      /* Mobile OTP Login Flow */
+                      <div className="space-y-4 text-left">
+                        {otpStep === 'phone' && (
+                          <div className="space-y-3">
+                            <p className="text-xs text-gray-500 font-sans leading-relaxed">
+                              Sign in instantly using your mobile number and a fast SMS OTP code.
+                            </p>
+                            <div>
+                              <label className="text-xs font-semibold text-dark/70 font-display block mb-1">
+                                Mobile Phone Number
+                              </label>
+                              <div className="flex items-center gap-2">
+                                <span className="bg-light-gray border border-border-gray/60 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-dark/80 font-display select-none">
+                                  +91
+                                </span>
+                                <input
+                                  type="tel"
+                                  value={otpPhone}
+                                  onChange={(e) => setOtpPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                                  placeholder="10-digit mobile number"
+                                  maxLength={10}
+                                  className="w-full bg-white border border-border-gray/60 rounded-xl px-3.5 py-2.5 text-xs text-dark placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 font-sans"
+                                />
+                              </div>
+                            </div>
+
+                            <Button
+                              type="button"
+                              variant="primary"
+                              onClick={handleSendPhoneOtp}
+                              disabled={isSendingOtp || otpPhone.replace(/\D/g, '').length !== 10}
+                              className="w-full py-3.5 rounded-xl font-display font-semibold text-xs uppercase tracking-wider mt-4"
+                            >
+                              {isSendingOtp ? 'Sending OTP Code...' : 'Send OTP via SMS'}
+                            </Button>
+                          </div>
+                        )}
+
+                        {otpStep === 'otp' && (
+                          <div className="space-y-3 bg-primary/[0.02] border border-primary/10 rounded-2xl p-4">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-gray-600 font-sans">
+                                Code sent to <strong className="text-dark">+91 {otpPhone}</strong>
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOtpStep('phone');
+                                  setOtpCode('');
+                                }}
+                                className="text-primary hover:underline font-semibold text-[11px] cursor-pointer"
+                              >
+                                Edit Number
+                              </button>
+                            </div>
+
+                            {simulatedOtpHint && (
+                              <div className="bg-amber-50 border border-amber-200 text-amber-800 text-[11px] p-2.5 rounded-xl flex items-center justify-between">
+                                <span>Dev Mode OTP: <strong>{simulatedOtpHint}</strong></span>
+                                <button
+                                  type="button"
+                                  onClick={() => setOtpCode(simulatedOtpHint)}
+                                  className="text-amber-900 underline font-semibold text-[10px]"
+                                >
+                                  Auto Fill
+                                </button>
+                              </div>
+                            )}
+
+                            <div>
+                              <label className="text-xs font-semibold text-dark/70 font-display block mb-1 text-center">
+                                Enter 6-Digit Verification Code
+                              </label>
+                              <OtpInput
+                                value={otpCode}
+                                onChange={setOtpCode}
+                                disabled={isVerifyingOtp}
+                              />
+                            </div>
+
+                            <div className="flex items-center justify-between pt-1 text-xs">
+                              <button
+                                type="button"
+                                disabled={otpCooldown > 0 || isSendingOtp}
+                                onClick={handleSendPhoneOtp}
+                                className={`font-medium ${
+                                  otpCooldown > 0 ? 'text-gray-400 cursor-not-allowed' : 'text-primary hover:underline cursor-pointer'
+                                }`}
+                              >
+                                {otpCooldown > 0 ? `Resend OTP in ${otpCooldown}s` : 'Resend Code'}
+                              </button>
+                            </div>
+
+                            <Button
+                              type="button"
+                              variant="primary"
+                              onClick={handleVerifyPhoneOtp}
+                              disabled={isVerifyingOtp || otpCode.length !== 6}
+                              className="w-full py-3.5 rounded-xl font-display font-semibold text-xs uppercase tracking-wider mt-4"
+                            >
+                              {isVerifyingOtp ? 'Verifying Code...' : 'Verify OTP & Sign In'}
+                            </Button>
+                          </div>
+                        )}
+
+                        {otpStep === 'name' && (
+                          <div className="space-y-3 bg-primary/[0.02] border border-primary/10 rounded-2xl p-4">
+                            <div className="space-y-1">
+                              <h4 className="font-display font-semibold text-dark text-sm">
+                                Complete Account Setup
+                              </h4>
+                              <p className="text-xs text-gray-500 font-sans leading-relaxed">
+                                Your phone number is verified! Please enter your name to complete onboarding.
+                              </p>
+                            </div>
+
+                            <div className="space-y-3 pt-2">
+                              <div>
+                                <label className="text-xs font-semibold text-dark/70 font-display block mb-1">
+                                  Full Name <span className="text-rose-500">*</span>
+                                </label>
+                                <input
+                                  type="text"
+                                  value={otpName}
+                                  onChange={(e) => setOtpName(e.target.value)}
+                                  placeholder="e.g. Rahul Patel"
+                                  className="w-full bg-white border border-border-gray/60 rounded-xl px-3.5 py-2.5 text-xs text-dark placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 font-sans"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="text-xs font-semibold text-dark/70 font-display block mb-1">
+                                  Email Address <span className="text-gray-400 text-[10px]">(Optional)</span>
+                                </label>
+                                <input
+                                  type="email"
+                                  value={otpEmail}
+                                  onChange={(e) => setOtpEmail(e.target.value)}
+                                  placeholder="e.g. rahul@example.com"
+                                  className="w-full bg-white border border-border-gray/60 rounded-xl px-3.5 py-2.5 text-xs text-dark placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 font-sans"
+                                />
+                              </div>
+
+                              <Button
+                                type="button"
+                                variant="primary"
+                                onClick={handleCompletePhoneOnboarding}
+                                disabled={isOnboarding || otpName.trim().length < 2}
+                                className="w-full py-3.5 rounded-xl font-display font-semibold text-xs uppercase tracking-wider mt-4"
+                              >
+                                {isOnboarding ? 'Saving Profile...' : 'Complete & Sign In'}
+                              </Button>
+                            </div>
                           </div>
                         )}
                       </div>
-
-                      {/* Password input */}
-                      <div className="space-y-1.5">
-                        <div className="flex justify-between items-center">
+                    ) : (
+                      /* Existing Email & Password Login Flow */
+                      <form onSubmit={formik.handleSubmit} className="space-y-4">
+                        {/* Email input */}
+                        <div className="space-y-1.5">
                           <label className="text-xs font-semibold text-dark/70 font-display flex items-center gap-1.5">
-                            <Lock size={13} className="text-gray-400" />
-                            <span>Password</span>
+                            <Mail size={13} className="text-gray-400" />
+                            <span>Email Address</span>
                           </label>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setForgotEmail(formik.values.email);
-                              setShowForgotPassword(true);
-                            }}
-                            className="text-[11px] font-semibold text-primary hover:underline cursor-pointer"
-                          >
-                            Forgot Password?
-                          </button>
-                        </div>
-                        
-                        <div className="relative">
                           <input
-                            type={showPassword ? 'text' : 'password'}
-                            name="password"
-                            placeholder="••••••••••••"
-                            value={formik.values.password}
+                            type="email"
+                            name="email"
+                            placeholder="name@example.com"
+                            value={formik.values.email}
                             onChange={formik.handleChange}
                             onBlur={formik.handleBlur}
-                            className={`w-full border pl-4 pr-10 py-3 text-sm rounded-xl text-dark focus:outline-none focus:border-primary font-sans bg-light-gray/20 transition-colors ${
-                              formik.touched.password && formik.errors.password
+                            className={`w-full border px-4 py-3 text-sm rounded-xl text-dark focus:outline-none focus:border-primary font-sans bg-light-gray/20 transition-colors ${
+                              formik.touched.email && formik.errors.email
                                 ? 'border-red-500 focus:border-red-500'
                                 : 'border-border-gray/80'
                             }`}
                           />
-                          <button
-                            type="button"
-                            onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-dark focus:outline-none cursor-pointer p-0.5"
-                          >
-                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                          </button>
+                          {formik.touched.email && formik.errors.email && (
+                            <div className="text-[10px] text-red-500 font-sans font-medium mt-1">
+                              {String(formik.errors.email)}
+                            </div>
+                          )}
                         </div>
-                        {formik.touched.password && formik.errors.password && (
-                          <div className="text-[10px] text-red-500 font-sans font-medium mt-1">
-                            {String(formik.errors.password)}
-                          </div>
-                        )}
-                      </div>
 
-                      {/* Submit Button */}
-                      <Button
-                        type="submit"
-                        variant="primary"
-                        className="w-full py-3.5 rounded-xl font-display font-semibold text-xs uppercase tracking-wider mt-4"
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? (
-                          <span className="flex items-center justify-center gap-2">
-                            <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                            <span>Authenticating...</span>
-                          </span>
-                        ) : (
-                          <span className="flex items-center justify-center gap-1.5">
-                            <span>Sign In</span>
-                            <ArrowRight size={14} />
-                          </span>
-                        )}
-                      </Button>
-                    </form>
+                        {/* Password input */}
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between items-center">
+                            <label className="text-xs font-semibold text-dark/70 font-display flex items-center gap-1.5">
+                              <Lock size={13} className="text-gray-400" />
+                              <span>Password</span>
+                            </label>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setForgotEmail(formik.values.email);
+                                setShowForgotPassword(true);
+                              }}
+                              className="text-[11px] font-semibold text-primary hover:underline cursor-pointer"
+                            >
+                              Forgot Password?
+                            </button>
+                          </div>
+                          
+                          <div className="relative">
+                            <input
+                              type={showPassword ? 'text' : 'password'}
+                              name="password"
+                              placeholder="••••••••••••"
+                              value={formik.values.password}
+                              onChange={formik.handleChange}
+                              onBlur={formik.handleBlur}
+                              className={`w-full border pl-4 pr-10 py-3 text-sm rounded-xl text-dark focus:outline-none focus:border-primary font-sans bg-light-gray/20 transition-colors ${
+                                formik.touched.password && formik.errors.password
+                                  ? 'border-red-500 focus:border-red-500'
+                                  : 'border-border-gray/80'
+                              }`}
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-dark focus:outline-none cursor-pointer p-0.5"
+                            >
+                              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                          </div>
+                          {formik.touched.password && formik.errors.password && (
+                            <div className="text-[10px] text-red-500 font-sans font-medium mt-1">
+                              {String(formik.errors.password)}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Submit Button */}
+                        <Button
+                          type="submit"
+                          variant="primary"
+                          className="w-full py-3.5 rounded-xl font-display font-semibold text-xs uppercase tracking-wider mt-4"
+                          disabled={isSubmitting}
+                        >
+                          {isSubmitting ? (
+                            <span className="flex items-center justify-center gap-2">
+                              <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                              <span>Signing In...</span>
+                            </span>
+                          ) : (
+                            'Sign In With Email'
+                          )}
+                        </Button>
+                      </form>
+                    )}
 
                     {/* Divider */}
                     <div className="relative flex items-center justify-center py-2 text-xs">

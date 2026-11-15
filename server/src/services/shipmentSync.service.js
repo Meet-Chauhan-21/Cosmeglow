@@ -1,7 +1,12 @@
+const mongoose = require('mongoose');
 const Order = require('../models/order.model');
 const shiprocketService = require('./shiprocket.service');
 
 const syncActiveShipments = async () => {
+  if (mongoose.connection.readyState !== 1) {
+    console.warn('[Shipment Sync] Database is not connected. Skipping shipment sync.');
+    return;
+  }
   console.log('[Shipment Sync] Starting shipment status sync...');
   try {
     // Find active orders with shipment created and AWB code assigned

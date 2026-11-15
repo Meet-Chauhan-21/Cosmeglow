@@ -110,7 +110,10 @@ const getSettings = async (req, res) => {
       settings.shopName = 'CosmeGlow Skincare';
       await settings.save();
     }
-    return res.status(200).json({ settings });
+    const payload = settings.toObject ? settings.toObject() : settings;
+    payload.shopBanners = Array.isArray(payload.shopBanners) ? payload.shopBanners.filter(Boolean) : [];
+    payload.shopBanner = payload.shopBanner || payload.shopBanners[0] || '';
+    return res.status(200).json({ settings: payload });
   } catch (error) {
     console.error('Admin Get Settings Error:', error);
     return res.status(500).json({ message: 'Server error. Failed to get settings.' });
@@ -144,7 +147,9 @@ const updateSettings = async (req, res) => {
       deliveryCharge,
       enableFreeDeliveryThreshold,
       freeDeliveryThreshold,
-      banners
+      banners,
+      shopBanner,
+      shopBanners
     } = req.body;
 
     let settings = await Settings.findOne();
@@ -174,9 +179,20 @@ const updateSettings = async (req, res) => {
     settings.enableFreeDeliveryThreshold = enableFreeDeliveryThreshold !== undefined ? enableFreeDeliveryThreshold : settings.enableFreeDeliveryThreshold;
     settings.freeDeliveryThreshold = freeDeliveryThreshold !== undefined ? freeDeliveryThreshold : settings.freeDeliveryThreshold;
     settings.banners = banners !== undefined ? banners : settings.banners;
+    settings.shopBanner = shopBanner !== undefined ? shopBanner : settings.shopBanner;
+    if (shopBanners !== undefined) {
+      settings.shopBanners = Array.isArray(shopBanners) ? shopBanners.filter(Boolean) : [];
+      settings.markModified('shopBanners');
+      if (!settings.shopBanner && settings.shopBanners[0]) {
+        settings.shopBanner = settings.shopBanners[0];
+      }
+    }
 
     const updated = await settings.save();
-    return res.status(200).json({ message: 'Settings updated successfully', settings: updated });
+    const payload = updated.toObject ? updated.toObject() : updated;
+    payload.shopBanners = Array.isArray(payload.shopBanners) ? payload.shopBanners.filter(Boolean) : [];
+    payload.shopBanner = payload.shopBanner || payload.shopBanners[0] || '';
+    return res.status(200).json({ message: 'Settings updated successfully', settings: payload });
   } catch (error) {
     console.error('Admin Update Settings Error:', error);
     return res.status(500).json({ message: 'Server error. Failed to update settings.' });

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowLeft, Edit, Package, Tag, Star, Truck, ShieldCheck, Percent, Sparkles, Layers, List } from 'lucide-react';
+import { ArrowLeft, Edit, Package, Tag, Star, Percent, Sparkles, Layers, List, Compass, Info, Image as ImageIcon } from 'lucide-react';
 import { useNavigate, useParams } from 'react-router-dom';
 import AdminLayout from '../../components/admin/AdminLayout';
 import Card from '../../components/admin/Card';
@@ -245,19 +245,23 @@ const ProductView: React.FC = () => {
               </div>
             </Card>
 
-            {/* Additional meta details grid */}
+            {/* Original Product Attributes & Why You'll Love It */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
-              {/* Product Specifications */}
+              {/* Product Attributes */}
               <Card title="Product Attributes" icon={List}>
                 <div className="space-y-3.5 text-sm text-gray-600 font-sans">
                   <div className="flex justify-between items-center py-1 border-b border-gray-50">
-                    <span className="text-gray-400 font-medium">SKU reference</span>
+                    <span className="text-gray-400 font-medium">Category</span>
+                    <span className="font-semibold text-primary">{product.category || 'Uncategorized'}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1 border-b border-gray-50">
+                    <span className="text-gray-400 font-medium">SKU Reference</span>
                     <span className="font-semibold text-gray-800">{product.sku || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-gray-50">
-                    <span className="text-gray-400 font-medium">Fluid Volume</span>
-                    <span className="font-semibold text-gray-800">{product.volume || '100ml'}</span>
+                    <span className="text-gray-400 font-medium">Net Volume</span>
+                    <span className="font-semibold text-gray-800">{product.volume || 'N/A'}</span>
                   </div>
                   <div className="flex justify-between items-center py-1 border-b border-gray-50">
                     <span className="text-gray-400 font-medium">Catalog Status</span>
@@ -273,58 +277,82 @@ const ProductView: React.FC = () => {
                 </div>
               </Card>
 
-              {/* Delivery and badges info */}
-              <Card title="Fulfillment Settings" icon={Truck}>
-                <div className="space-y-3 text-sm text-gray-600 font-sans">
-                  <div className="flex items-center gap-2.5 py-0.5 text-gray-700">
-                    <ShieldCheck size={18} className="text-emerald-500 shrink-0" />
-                    <span>Safe & Quality Assured formulation</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 py-0.5 text-gray-700">
-                    <Truck size={18} className="text-indigo-500 shrink-0" />
-                    <span>Standard Express Shipping available</span>
-                  </div>
-                  <div className="flex items-center gap-2.5 py-0.5 text-gray-700">
-                    <Package size={18} className="text-amber-500 shrink-0" />
-                    <span>Secure tamper-proof product packaging</span>
-                  </div>
-                </div>
+              {/* Why You'll Love It (One point per line) */}
+              <Card title="Why you’ll love it?" icon={Sparkles}>
+                {Array.isArray(product.whyLoveIt) && product.whyLoveIt.length > 0 ? (
+                  <ul className="space-y-2 text-sm text-gray-700 font-sans">
+                    {product.whyLoveIt.map((point: string, idx: number) => (
+                      <li key={idx} className="flex items-start gap-2.5">
+                        <span className="text-primary font-bold text-sm leading-none mt-0.5">✓</span>
+                        <span className="leading-snug">{point}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-gray-400 italic font-sans">No points specified.</p>
+                )}
               </Card>
 
             </div>
 
-            {/* Ingredients and Benefits */}
+            {/* Direction of Use & Additional Information */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              
+              {/* Direction of Use Card */}
+              <Card title="Direction of Use" icon={Compass}>
+                {product.directionOfUse ? (
+                  <p className="text-sm text-gray-700 font-sans whitespace-pre-line leading-relaxed">
+                    {product.directionOfUse}
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-400 italic font-sans">No direction of use specified.</p>
+                )}
+              </Card>
+
+              {/* Additional Information Card */}
+              <Card title="Additional Information" icon={Info}>
+                {product.additionalInfo ? (
+                  <p className="text-sm text-gray-700 font-sans whitespace-pre-line leading-relaxed">
+                    {product.additionalInfo}
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-400 italic font-sans">No additional information specified.</p>
+                )}
+              </Card>
+
+            </div>
+
+            {/* Ingredients & Promo Banners */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               {/* Ingredients Card */}
               <Card title="Ingredients Formulation" icon={Layers}>
                 <div className="flex flex-wrap gap-2">
-                  {(product.ingredients || []).length > 0 ? (
+                  {Array.isArray(product.ingredients) && product.ingredients.length > 0 ? (
                     product.ingredients.map((item: string) => (
                       <span key={item} className="px-3 py-1.5 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-100 text-xs font-semibold font-sans">
                         {item}
                       </span>
                     ))
                   ) : (
-                    <p className="text-sm text-gray-400 italic">No ingredients specified for this product.</p>
+                    <p className="text-sm text-gray-400 italic font-sans">No ingredients specified.</p>
                   )}
                 </div>
               </Card>
 
-              {/* Benefits Card */}
-              <Card title="Proven Benefits" icon={Sparkles}>
-                <ul className="space-y-2.5 text-sm text-gray-655 font-sans">
-                  {(product.benefits || []).length > 0 ? (
-                    product.benefits.map((item: string) => (
-                      <li key={item} className="flex items-start gap-2">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-1.5 shrink-0" />
-                        <span>{item}</span>
-                      </li>
-                    ))
-                  ) : (
-                    <li className="text-sm text-gray-400 italic">No benefits specified.</li>
-                  )}
-                </ul>
+              {/* Description Promo Banners */}
+              <Card title="Description Promo Banners" icon={ImageIcon}>
+                {Array.isArray(product.descriptionBanners) && product.descriptionBanners.length > 0 ? (
+                  <div className="grid grid-cols-3 gap-2.5">
+                    {product.descriptionBanners.map((bannerUrl: string, bIdx: number) => (
+                      <div key={bIdx} className="aspect-video rounded-xl overflow-hidden bg-slate-50 border border-slate-200">
+                        <img src={bannerUrl} alt={`Banner ${bIdx + 1}`} className="w-full h-full object-cover" />
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-400 italic font-sans">No promotional banners uploaded.</p>
+                )}
               </Card>
 
             </div>

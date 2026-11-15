@@ -173,7 +173,7 @@ export const CartDrawer: React.FC = () => {
                             onClick={() =>
                               updateCartQuantity(item.product.id, item.selectedSize, item.quantity - 1)
                             }
-                            className="p-1.5 hover:bg-gray-200 text-dark/70 transition-colors focus:outline-none cursor-pointer active:scale-90"
+                            className="p-1.5 hover:text-primary hover:bg-primary/10 text-dark/70 transition-colors focus:outline-none cursor-pointer active:scale-90"
                           >
                             <Minus size={11} strokeWidth={2.5} />
                           </button>
@@ -184,7 +184,7 @@ export const CartDrawer: React.FC = () => {
                             onClick={() =>
                               updateCartQuantity(item.product.id, item.selectedSize, item.quantity + 1)
                             }
-                            className="p-1.5 hover:bg-gray-200 text-dark/70 transition-colors focus:outline-none cursor-pointer active:scale-90"
+                            className="p-1.5 hover:text-primary hover:bg-primary/10 text-dark/70 transition-colors focus:outline-none cursor-pointer active:scale-90"
                           >
                             <Plus size={11} strokeWidth={2.5} />
                           </button>

@@ -2,6 +2,7 @@ const Product = require('../../models/product.model');
 const Category = require('../../models/category.model');
 const mongoose = require('mongoose');
 const cloudinary = require('cloudinary').v2;
+const { parseLineList, parseImageList } = require('../../util/productFields.util');
 
 // Configure Cloudinary (in case it is used directly)
 cloudinary.config({
@@ -75,16 +76,17 @@ const createProduct = async (req, res) => {
       hoverImage,
       images,
       ingredients,
-      benefits,
-      rating,
-      reviewsCount,
       isBestSeller,
       isNewArrival,
       stock,
       sku,
       status,
       volume,
-      video
+      video,
+      descriptionBanners,
+      directionOfUse,
+      additionalInfo,
+      whyLoveIt
     } = req.body;
 
     if (!name || !category || !description || price === undefined || price === null || image === undefined || image === '' || stock === undefined || stock === null || sku === undefined || sku === '') {
@@ -116,16 +118,19 @@ const createProduct = async (req, res) => {
       hoverImage: hoverImage || (Array.isArray(images) && (images[1] && typeof images[1] === 'object' ? images[1].url : images[1])) || image,
       images: Array.isArray(images) ? images.filter(Boolean) : [],
       ingredients: ingredients || [],
-      benefits: benefits || [],
-      rating: rating !== undefined ? rating : 0,
-      reviewsCount: reviewsCount !== undefined ? reviewsCount : 0,
+      rating: 0,
+      reviewsCount: 0,
       isBestSeller: isBestSeller || false,
       isNewArrival: isNewArrival || false,
       stock,
       sku,
       status: status || 'active',
       volume: volume || '50ml',
-      video: video || ''
+      video: video || '',
+      descriptionBanners: parseImageList(descriptionBanners),
+      directionOfUse: directionOfUse || '',
+      additionalInfo: additionalInfo || '',
+      whyLoveIt: parseLineList(whyLoveIt, req.body.whyLoveItText)
     });
 
     return res.status(201).json({
@@ -159,16 +164,17 @@ const updateProduct = async (req, res) => {
       hoverImage,
       images,
       ingredients,
-      benefits,
-      rating,
-      reviewsCount,
       isBestSeller,
       isNewArrival,
       stock,
       sku,
       status,
       volume,
-      video
+      video,
+      descriptionBanners,
+      directionOfUse,
+      additionalInfo,
+      whyLoveIt
     } = req.body;
 
     if (sku && sku !== product.sku) {
@@ -197,10 +203,7 @@ const updateProduct = async (req, res) => {
     product.image = image || product.image;
     product.hoverImage = hoverImage !== undefined ? hoverImage : product.hoverImage;
     product.images = Array.isArray(images) ? images.filter(Boolean) : product.images;
-    product.ingredients = ingredients || product.ingredients;
-    product.benefits = benefits || product.benefits;
-    product.rating = rating !== undefined ? rating : product.rating;
-    product.reviewsCount = reviewsCount !== undefined ? reviewsCount : product.reviewsCount;
+    product.ingredients = ingredients !== undefined ? (Array.isArray(ingredients) ? ingredients : [ingredients]) : product.ingredients;
     product.isBestSeller = isBestSeller !== undefined ? isBestSeller : product.isBestSeller;
     product.isNewArrival = isNewArrival !== undefined ? isNewArrival : product.isNewArrival;
     product.stock = stock !== undefined ? stock : product.stock;
@@ -208,6 +211,16 @@ const updateProduct = async (req, res) => {
     product.status = status || product.status;
     product.volume = volume !== undefined ? volume : product.volume;
     product.video = video !== undefined ? video : product.video;
+    if (descriptionBanners !== undefined) {
+      product.descriptionBanners = parseImageList(descriptionBanners);
+      product.markModified('descriptionBanners');
+    }
+    product.directionOfUse = directionOfUse !== undefined ? directionOfUse : product.directionOfUse;
+    product.additionalInfo = additionalInfo !== undefined ? additionalInfo : product.additionalInfo;
+    if (whyLoveIt !== undefined || req.body.whyLoveItText !== undefined) {
+      product.whyLoveIt = parseLineList(whyLoveIt, req.body.whyLoveItText);
+      product.markModified('whyLoveIt');
+    }
 
     const updatedProduct = await product.save();
 
@@ -275,11 +288,15 @@ const uploadImage = async (req, res) => {
     }
 
     const folder = req.body.folder || 'CosmeGlow/products';
+    const isBanner = /banner/i.test(folder);
 
     const uploadStream = cloudinary.uploader.upload_stream(
-      { 
+      {
         folder: folder,
-        resource_type: 'auto'
+        resource_type: 'image',
+        quality: isBanner ? 'auto:eco' : 'auto:good',
+        fetch_format: 'auto',
+        transformation: isBanner ? [{ width: 1600, crop: 'limit' }] : undefined
       },
       (error, result) => {
         if (error) {
@@ -358,6 +375,35 @@ const deleteCloudinaryAsset = async (req, res) => {
   }
 };
 
+// @desc    Get All Categories for Admin
+// @route   GET /api/admin/categories
+// @access  Private/Admin
+const getAllCategoriesAdmin = async (req, res) => {
+  try {
+    const categories = await Category.find().sort({ sortOrder: 1, name: 1 });
+    const categoriesWithCount = await Promise.all(
+      categories.map(async (cat) => {
+        const count = await Product.countDocuments({ category: cat._id });
+        return {
+          id: cat._id,
+          _id: cat._id,
+          name: cat.name,
+          slug: cat.slug,
+          image: cat.image,
+          altText: cat.altText,
+          isActive: cat.isActive !== undefined ? cat.isActive : true,
+          sortOrder: cat.sortOrder,
+          count: count
+        };
+      })
+    );
+    return res.status(200).json(categoriesWithCount);
+  } catch (error) {
+    console.error('Admin Get Categories Error:', error);
+    return res.status(500).json({ message: 'Server error. Failed to fetch categories.' });
+  }
+};
+
 // @desc    Create Category
 // @route   POST /api/admin/categories
 // @access  Private/Admin
@@ -383,7 +429,7 @@ const createCategory = async (req, res) => {
       slug,
       image,
       altText: altText || '',
-      isActive: isActive !== undefined ? isActive : true,
+      isActive: isActive !== undefined ? (isActive === true || isActive === 'true') : true,
       sortOrder: sortOrder !== undefined ? Number(sortOrder) : 0
     });
 
@@ -423,7 +469,9 @@ const updateCategory = async (req, res) => {
 
     category.image = image !== undefined ? image : category.image;
     category.altText = altText !== undefined ? altText : category.altText;
-    category.isActive = isActive !== undefined ? isActive : category.isActive;
+    if (isActive !== undefined) {
+      category.isActive = isActive === true || isActive === 'true';
+    }
     category.sortOrder = sortOrder !== undefined ? Number(sortOrder) : category.sortOrder;
 
     const updated = await category.save();
@@ -513,6 +561,7 @@ module.exports = {
   uploadImage,
   uploadVideo,
   deleteCloudinaryAsset,
+  getAllCategoriesAdmin,
   createCategory,
   updateCategory,
   deleteCategory

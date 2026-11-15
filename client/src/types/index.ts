@@ -1,5 +1,6 @@
 export interface Product {
   id: string;
+  _id?: string;
   name: string;
   category: string;
   categoryId?: string;
@@ -22,6 +23,10 @@ export interface Product {
   sku?: string;
   volume?: string;
   video?: string;
+  descriptionBanners?: string[];
+  directionOfUse?: string;
+  additionalInfo?: string;
+  whyLoveIt?: string[];
   createdAt?: string;
   updatedAt?: string;
 }
@@ -88,6 +93,7 @@ export interface AppSettings {
   gstNumber?: string;
   logo?: string;
     homepageImages?: {
+      spotlightProductId?: string;
       spotlight: string;
       spotlightName?: string;
       spotlightDescription?: string;
@@ -106,6 +112,8 @@ export interface AppSettings {
     enableFreeDeliveryThreshold?: boolean;
     freeDeliveryThreshold?: number;
     banners?: string[];
+    shopBanner?: string;
+    shopBanners?: string[];
   }
 
 export interface CartItem {
@@ -182,11 +190,13 @@ export interface Order {
 
 export interface User {
   id?: string;
+  _id?: string;
   name: string;
-  email: string;
+  email?: string;
   phone?: string;
   role?: string;
   password?: string;
   addresses?: Address[];
+  provider?: string;
 }
 

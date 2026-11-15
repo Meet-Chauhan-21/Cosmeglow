@@ -12,7 +12,10 @@ const {
   verifyEmail,
   resendVerification,
   forgotPassword,
-  resetPassword
+  resetPassword,
+  sendPhoneOtp,
+  verifyPhoneOtp,
+  completePhoneOnboarding
 } = require('../controller/user/auth.controller');
 
 const {
@@ -36,11 +39,23 @@ const googleRateLimiter = rateLimit({
   legacyHeaders: false
 });
 
+// Rate limiting configuration for Phone OTP (max 20 requests per 15 minutes)
+const otpRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  message: { message: 'Too many OTP attempts. Please wait a few minutes before trying again.' },
+  standardHeaders: true,
+  legacyHeaders: false
+});
+
 // Public routes
 router.post('/register', registerUser);
 router.post('/login', loginUser);
 router.post('/refresh', refreshAccessToken);
 router.post('/logout', logoutUser); // Clear cookie and invalidate session
+router.post('/send-phone-otp', otpRateLimiter, sendPhoneOtp);
+router.post('/verify-phone-otp', verifyPhoneOtp);
+router.post('/complete-phone-onboarding', completePhoneOnboarding);
 router.post('/google', googleRateLimiter, googleSignIn);
 router.post('/facebook', googleRateLimiter, facebookSignIn);
 router.post('/facebook-register', googleRateLimiter, facebookRegister);

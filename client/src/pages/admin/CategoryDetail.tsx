@@ -15,7 +15,7 @@ const CategoryDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { accessToken } = useAuth();
-  const { categories } = useStore();
+  const { categories, refreshCategories } = useStore();
 
   const [category, setCategory] = useState<any | null>(null);
   const [products, setProducts] = useState<any[]>([]);
@@ -27,6 +27,12 @@ const CategoryDetail: React.FC = () => {
   const [productToDelete, setProductToDelete] = useState<string | null>(null);
 
   useEffect(() => {
+    if (categories.length === 0) {
+      refreshCategories();
+    }
+  }, [categories.length, refreshCategories]);
+
+  useEffect(() => {
     if (categories.length > 0 && id) {
       const found = categories.find((c) => (c._id || c.id) === id);
       if (found) {
@@ -34,6 +40,37 @@ const CategoryDetail: React.FC = () => {
       }
     }
   }, [categories, id]);
+
+  const handleToggleActive = async () => {
+    if (!category) return;
+    const newStatus = !category.isActive;
+    const catId = category.id || category._id;
+    try {
+      const response = await fetch(`${API_BASE_URL}/admin/categories/${catId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({ isActive: newStatus }),
+      });
+
+      if (response.ok) {
+        setCategory((prev: any) => ({ ...prev, isActive: newStatus }));
+        toast.success(
+          newStatus
+            ? `Category "${category.name}" is now visible on user side (Shop page).`
+            : `Category "${category.name}" is now hidden from user side.`
+        );
+        await refreshCategories();
+      } else {
+        toast.error('Failed to update category status.');
+      }
+    } catch (error) {
+      console.error('Error toggling category status:', error);
+      toast.error('Failed to update category status.');
+    }
+  };
 
   const fetchCategoryProducts = async () => {
     if (!accessToken || !id) return;
@@ -234,7 +271,7 @@ const CategoryDetail: React.FC = () => {
                   <span className={`px-3 py-0.5 text-[9px] font-bold uppercase rounded-full tracking-widest ${
                     category.isActive ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' : 'bg-red-50 text-red-700 border border-red-100'
                   }`}>
-                    {category.isActive ? 'Active Collection' : 'Disabled'}
+                    {category.isActive ? 'Visible on Shop' : 'Hidden from Shop'}
                   </span>
                 </div>
                 
@@ -246,6 +283,32 @@ const CategoryDetail: React.FC = () => {
                     Alt SEO: "{category.altText}"
                   </p>
                 )}
+              </div>
+
+              {/* Show on User Side Toggle Switch Card */}
+              <div className="flex items-center gap-3 bg-slate-50 border border-slate-200/90 rounded-2xl px-4 py-3 shrink-0 shadow-2xs">
+                <div className="text-left">
+                  <span className="text-xs font-bold text-slate-800 block">Show on User Side</span>
+                  <span className={`text-[10px] font-semibold block mt-0.5 ${category.isActive ? 'text-emerald-600' : 'text-slate-400'}`}>
+                    {category.isActive ? '● Visible on Shop' : '○ Hidden from Shop'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={category.isActive}
+                  onClick={handleToggleActive}
+                  className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                    category.isActive ? 'bg-emerald-500' : 'bg-slate-300'
+                  }`}
+                  title={category.isActive ? 'Click to hide from user side' : 'Click to show on user side'}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                      category.isActive ? 'translate-x-5' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
               </div>
             </div>
           </div>

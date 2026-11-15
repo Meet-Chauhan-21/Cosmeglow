@@ -92,7 +92,7 @@ export const ProductModal: React.FC = () => {
             <div className="space-y-5">
               {/* Product Meta */}
               <div>
-                <span className="text-[10px] text-secondary font-bold uppercase tracking-widest font-display block mb-1">
+                <span className="text-[10px] text-primary font-bold uppercase tracking-widest font-display block mb-1">
                   {activeProduct.category}
                 </span>
                 <h2 className="text-xl sm:text-2xl font-display font-semibold text-dark tracking-tight leading-snug">
@@ -209,7 +209,7 @@ export const ProductModal: React.FC = () => {
                 <button
                   onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                   disabled={activeProduct.stock !== undefined && activeProduct.stock <= 0}
-                  className="p-3 hover:bg-gray-200 text-dark/70 transition-colors focus:outline-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="p-3 hover:text-primary hover:bg-primary/10 text-dark/70 transition-colors focus:outline-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Minus size={13} strokeWidth={2.5} />
                 </button>
@@ -217,7 +217,7 @@ export const ProductModal: React.FC = () => {
                 <button
                   onClick={() => setQuantity((q) => q + 1)}
                   disabled={activeProduct.stock !== undefined && activeProduct.stock <= 0}
-                  className="p-3 hover:bg-gray-200 text-dark/70 transition-colors focus:outline-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="p-3 hover:text-primary hover:bg-primary/10 text-dark/70 transition-colors focus:outline-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Plus size={13} strokeWidth={2.5} />
                 </button>

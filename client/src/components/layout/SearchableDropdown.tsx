@@ -59,7 +59,7 @@ export const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
     <div className="space-y-1.5 w-full relative" ref={containerRef}>
       {label && (
         <label className="text-xs font-semibold text-dark/70 font-display block">
-          {label} {required && <span className="text-red-500">*</span>}
+          {label} {required && <span className="text-rose-500">*</span>}
         </label>
       )}
 

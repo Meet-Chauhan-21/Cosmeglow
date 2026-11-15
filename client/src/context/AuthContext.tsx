@@ -11,6 +11,9 @@ interface AuthContextType {
   accessToken: string | null;
   login: (email: string, password: string) => Promise<boolean | { notVerified: boolean; email: string }>;
   register: (name: string, email: string, password: string, phone: string) => Promise<boolean>; // phone is now required
+  sendPhoneOtp: (phone: string) => Promise<{ success: boolean; message: string; simulated?: boolean; debugOtp?: string }>;
+  verifyPhoneOtp: (phone: string, otp: string, name?: string) => Promise<{ success: boolean; isNewUser?: boolean; verified?: boolean; message: string }>;
+  completePhoneOnboarding: (phone: string, name: string, email?: string) => Promise<{ success: boolean; message: string }>;
   googleLogin: (credentialOrToken: string, isAccessToken?: boolean) => Promise<boolean>;
   facebookLogin: (payload: { code?: string; accessToken?: string }) => Promise<boolean | { needsEmail: boolean; facebookId: string; name: string }>;
   facebookRegister: (name: string, email: string, facebookId: string) => Promise<boolean>;
@@ -323,6 +326,128 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error('Verify email context error:', error);
       setLoading(false);
       return { success: false, message: 'Server error. Verification failed.' };
+    }
+  };
+
+  const sendPhoneOtp = async (
+    phone: string
+  ): Promise<{ success: boolean; message: string; simulated?: boolean; debugOtp?: string }> => {
+    try {
+      const response = await fetch(`${API_BASE}/send-phone-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        toast.error(data.message || 'Failed to send OTP code.');
+        return { success: false, message: data.message || 'Failed to send OTP code.' };
+      }
+      toast.success(data.message || 'OTP verification code sent.');
+      return {
+        success: true,
+        message: data.message,
+        simulated: data.simulated,
+        debugOtp: data.debugOtp
+      };
+    } catch (error: any) {
+      console.error('Error sending phone OTP:', error);
+      toast.error('Network error sending OTP code.');
+      return { success: false, message: 'Network error sending OTP code.' };
+    }
+  };
+
+  const verifyPhoneOtp = async (
+    phone: string,
+    otp: string,
+    name?: string
+  ): Promise<{ success: boolean; isNewUser?: boolean; verified?: boolean; message: string }> => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE}/verify-phone-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, otp, name }),
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        toast.error(data.message || 'OTP verification failed.');
+        setLoading(false);
+        return { success: false, message: data.message || 'OTP verification failed.' };
+      }
+
+      // If user needs to provide name in next onboarding step
+      if (data.isNewUser && data.verified && !data.accessToken) {
+        setLoading(false);
+        return { success: true, isNewUser: true, verified: true, message: data.message };
+      }
+
+      // If logged in
+      if (data.accessToken) {
+        setAccessToken(data.accessToken);
+        if (data.user) {
+          setUser(data.user);
+        } else {
+          const profile = await fetchUserProfile(data.accessToken);
+          if (profile) setUser(profile);
+        }
+        toast.success(data.message || 'Login successful!');
+      }
+
+      setLoading(false);
+      return {
+        success: true,
+        isNewUser: data.isNewUser,
+        verified: true,
+        message: data.message
+      };
+    } catch (error: any) {
+      console.error('Error verifying phone OTP:', error);
+      toast.error('Network error verifying OTP.');
+      setLoading(false);
+      return { success: false, message: 'Network error verifying OTP.' };
+    }
+  };
+
+  const completePhoneOnboarding = async (
+    phone: string,
+    name: string,
+    email?: string
+  ): Promise<{ success: boolean; message: string }> => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE}/complete-phone-onboarding`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, name, email }),
+        credentials: 'include',
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        toast.error(data.message || 'Onboarding failed.');
+        setLoading(false);
+        return { success: false, message: data.message || 'Onboarding failed.' };
+      }
+
+      if (data.accessToken) {
+        setAccessToken(data.accessToken);
+        if (data.user) {
+          setUser(data.user);
+        } else {
+          const profile = await fetchUserProfile(data.accessToken);
+          if (profile) setUser(profile);
+        }
+        toast.success(`Welcome to CosmeGlow, ${name}!`);
+      }
+
+      setLoading(false);
+      return { success: true, message: data.message };
+    } catch (error: any) {
+      console.error('Error completing phone onboarding:', error);
+      toast.error('Network error during onboarding.');
+      setLoading(false);
+      return { success: false, message: 'Network error during onboarding.' };
     }
   };
 
@@ -647,6 +772,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         accessToken,
         login,
         register,
+        sendPhoneOtp,
+        verifyPhoneOtp,
+        completePhoneOnboarding,
         googleLogin,
         facebookLogin,
         facebookRegister,

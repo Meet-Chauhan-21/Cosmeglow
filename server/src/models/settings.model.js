@@ -82,7 +82,19 @@ const settingsSchema = new mongoose.Schema(
         'https://images.unsplash.com/photo-1512290923902-8a9f81dc236c?q=80&w=1200&auto=format&fit=crop'
       ]
     },
+    shopBanner: {
+      type: String,
+      default: ''
+    },
+    shopBanners: {
+      type: [String],
+      default: []
+    },
     homepageImages: {
+      spotlightProductId: {
+        type: String,
+        default: ''
+      },
       spotlight: {
         type: String,
         default: 'https://images.unsplash.com/photo-1617897903246-719242758050?q=80&w=800&auto=format&fit=crop'

@@ -11,7 +11,6 @@ import logoImg from '../../images/logo-rounded.png';
 export const Navbar: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,6 +56,7 @@ export const Navbar: React.FC = () => {
     }
 
     if (!path.startsWith('/#')) {
+      // Normal route navigation (e.g. /shop) — let Link handle it
       return;
     }
 
@@ -95,19 +95,6 @@ export const Navbar: React.FC = () => {
     setSearchQuery('');
     setSearchResults([]);
   };
-
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 20) {
-        setIsScrolled(true);
-      } else {
-        setIsScrolled(false);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
 
   useEffect(() => {
     if (location.pathname !== '/') {
@@ -165,8 +152,7 @@ export const Navbar: React.FC = () => {
 
   const navLinks = [
     { name: 'Home', path: '/' },
-    { name: 'Shop', path: '/#shop' },
-    { name: 'Categories', path: '/#categories' },
+    { name: 'Shop', path: '/shop' },
     { name: 'About', path: '/#about' },
     { name: 'Contact', path: '/#contact' },
   ];
@@ -177,38 +163,22 @@ export const Navbar: React.FC = () => {
 
   return (
     <>
-      {/* Header: lower z-index (z-40) so the drawer overlay (z-50) sits on top */}
-      <header
-        className={`fixed top-0 left-0 right-0 z-40 transition-all duration-500 ${
-          isScrolled
-            ? 'bg-white/95 border-b border-border-gray/60 py-3 shadow-sm backdrop-blur-md'
-            : 'bg-transparent py-5'
-        }`}
-      >
-        <Container className="flex items-center justify-between">
-          {/* Logo Frame with Spacer to prevent layout shift */}
+      {/* Header: sticky top-0, medium height, static without scaling, banner sits naturally below */}
+      <header className="sticky top-0 left-0 right-0 z-40 bg-white border-b border-border-gray/50 shadow-xs">
+        <Container className="flex items-center justify-between h-16 sm:h-18">
+          {/* Logo: clean, static, medium size, no scaling */}
           <Link
             to="/"
-            className="font-display font-medium text-primary flex items-center focus:outline-none relative z-50 h-8 w-36 sm:w-40 lg:w-56 xl:w-64"
+            className="font-display font-medium text-primary flex items-center gap-2 focus:outline-none"
           >
-            <div className={`transition-all duration-500 flex items-center gap-1 whitespace-nowrap ${
-              isScrolled
-                ? 'absolute left-0 top-1/2 -translate-y-1/2 scale-100'
-                : 'absolute left-0 top-1/2 -translate-y-1/2 scale-115 sm:scale-120 lg:scale-125 origin-left'
-            }`}>
-              <img 
-                src={logoImg} 
-                alt="CosmeGlow logo" 
-                className={`transition-all duration-500 object-contain rounded-full shadow-xs ${
-                  isScrolled ? 'h-7 w-7 mt-0.5' : 'h-9 w-9 mt-1'
-                }`} 
-              />
-              <span className={`text-primary transition-all duration-500 font-bold tracking-normal ${
-                isScrolled ? 'text-sm' : 'text-sm sm:text-base'
-              }`}>
-                CosmeGlow
-              </span>
-            </div>
+            <img 
+              src={logoImg} 
+              alt="CosmeGlow logo" 
+              className="h-8 w-8 sm:h-9 sm:w-9 object-contain rounded-full shadow-xs shrink-0" 
+            />
+            <span className="text-primary font-bold text-base sm:text-lg tracking-normal">
+              CosmeGlow
+            </span>
           </Link>
 
           {/* Desktop Navigation Links */}
@@ -466,7 +436,7 @@ export const Navbar: React.FC = () => {
                       />
                       <div className="flex-grow text-left">
                         <h4 className="font-display font-semibold text-sm text-dark leading-tight">{product.name}</h4>
-                        <span className="text-[10px] text-secondary font-bold uppercase tracking-wider block mt-0.5">{product.category}</span>
+                        <span className="text-[10px] text-primary font-bold uppercase tracking-wider block mt-0.5">{product.category}</span>
                       </div>
                       <span className="font-display font-bold text-dark text-sm">₹{product.price.toFixed(2)}</span>
                     </Link>

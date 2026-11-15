@@ -1,7 +1,6 @@
-import { createBrowserRouter, Navigate } from 'react-router-dom';
-import Home from '../pages/Home';
+import { createBrowserRouter, Navigate, useParams } from 'react-router-dom';
 import ProductDetail from '../pages/ProductDetail';
-import Category from '../pages/Category';
+import Shop from '../pages/Shop';
 import Profile from '../pages/Profile';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
@@ -27,14 +26,21 @@ import VerifyEmail from '../pages/VerifyEmail';
 import ResetPassword from '../pages/ResetPassword';
 import ApiMetrics from '../pages/admin/ApiMetrics';
 import SendEmail from '../pages/admin/SendEmail';
+import RouteErrorBoundary from '../components/common/ErrorBoundary';
+
+const CategoryRedirect: React.FC = () => {
+  const { slug } = useParams<{ slug: string }>();
+  return <Navigate to={slug ? `/shop?category=${encodeURIComponent(slug)}` : '/shop'} replace />;
+};
 
 export const router = createBrowserRouter([
   {
     element: <Layout />,
+    errorElement: <RouteErrorBoundary />,
     children: [
       {
         path: '/',
-        element: <Home />,
+        element: null,
       },
       {
         path: '/product/:id',
@@ -42,7 +48,11 @@ export const router = createBrowserRouter([
       },
       {
         path: '/category/:slug',
-        element: <Category />,
+        element: <CategoryRedirect />,
+      },
+      {
+        path: '/shop',
+        element: <Shop />,
       },
       {
         path: '/profile',

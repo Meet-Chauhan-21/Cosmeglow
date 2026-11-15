@@ -1,6 +1,7 @@
 const Product = require('../models/product.model');
 const Category = require('../models/category.model');
 const mongoose = require('mongoose');
+const { parseLineList, parseImageList } = require('../util/productFields.util');
 
 // @desc    Get all products
 // @route   GET /api/products
@@ -79,16 +80,17 @@ const createProduct = async (req, res) => {
       hoverImage,
       images,
       ingredients,
-      benefits,
-      rating,
-      reviewsCount,
       isBestSeller,
       isNewArrival,
       stock,
       sku,
       status,
       volume,
-      video
+      video,
+      descriptionBanners,
+      directionOfUse,
+      additionalInfo,
+      whyLoveIt
     } = req.body;
 
     if (!name || !category || !description || price === undefined || price === null || image === undefined || image === '' || stock === undefined || stock === null || sku === undefined || sku === '') {
@@ -120,16 +122,19 @@ const createProduct = async (req, res) => {
       hoverImage: hoverImage || (Array.isArray(images) && (images[1] && typeof images[1] === 'object' ? images[1].url : images[1])) || image,
       images: Array.isArray(images) ? images.filter(Boolean) : [],
       ingredients: ingredients || [],
-      benefits: benefits || [],
-      rating: rating !== undefined ? rating : 0,
-      reviewsCount: reviewsCount !== undefined ? reviewsCount : 0,
+      rating: 0,
+      reviewsCount: 0,
       isBestSeller: isBestSeller || false,
       isNewArrival: isNewArrival || false,
       stock,
       sku,
       status: status || 'active',
       volume: volume || '50ml',
-      video: video || ''
+      video: video || '',
+      descriptionBanners: parseImageList(descriptionBanners),
+      directionOfUse: directionOfUse || '',
+      additionalInfo: additionalInfo || '',
+      whyLoveIt: parseLineList(whyLoveIt, req.body.whyLoveItText)
     });
 
     return res.status(201).json({
@@ -163,16 +168,17 @@ const updateProduct = async (req, res) => {
       hoverImage,
       images,
       ingredients,
-      benefits,
-      rating,
-      reviewsCount,
       isBestSeller,
       isNewArrival,
       stock,
       sku,
       status,
       volume,
-      video
+      video,
+      descriptionBanners,
+      directionOfUse,
+      additionalInfo,
+      whyLoveIt
     } = req.body;
 
     if (sku && sku !== product.sku) {
@@ -201,10 +207,7 @@ const updateProduct = async (req, res) => {
     product.image = image || product.image;
     product.hoverImage = hoverImage !== undefined ? hoverImage : product.hoverImage;
     product.images = Array.isArray(images) ? images.filter(Boolean) : product.images;
-    product.ingredients = ingredients || product.ingredients;
-    product.benefits = benefits || product.benefits;
-    product.rating = rating !== undefined ? rating : product.rating;
-    product.reviewsCount = reviewsCount !== undefined ? reviewsCount : product.reviewsCount;
+    product.ingredients = ingredients !== undefined ? (Array.isArray(ingredients) ? ingredients : [ingredients]) : product.ingredients;
     product.isBestSeller = isBestSeller !== undefined ? isBestSeller : product.isBestSeller;
     product.isNewArrival = isNewArrival !== undefined ? isNewArrival : product.isNewArrival;
     product.stock = stock !== undefined ? stock : product.stock;
@@ -212,6 +215,16 @@ const updateProduct = async (req, res) => {
     product.status = status || product.status;
     product.volume = volume !== undefined ? volume : product.volume;
     product.video = video !== undefined ? video : product.video;
+    if (descriptionBanners !== undefined) {
+      product.descriptionBanners = parseImageList(descriptionBanners);
+      product.markModified('descriptionBanners');
+    }
+    product.directionOfUse = directionOfUse !== undefined ? directionOfUse : product.directionOfUse;
+    product.additionalInfo = additionalInfo !== undefined ? additionalInfo : product.additionalInfo;
+    if (whyLoveIt !== undefined || req.body.whyLoveItText !== undefined) {
+      product.whyLoveIt = parseLineList(whyLoveIt, req.body.whyLoveItText);
+      product.markModified('whyLoveIt');
+    }
 
     const updatedProduct = await product.save();
 

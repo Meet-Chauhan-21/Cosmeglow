@@ -51,8 +51,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Standard Middlewares
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '8mb' }));
+app.use(express.urlencoded({ extended: true, limit: '8mb' }));
 app.use(cookieParser());
 
 // Base Route
@@ -89,7 +89,7 @@ app.get('/api/categories', async (req, res) => {
           slug: cat.slug,
           image: cat.image,
           altText: cat.altText,
-          isActive: cat.isActive,
+          isActive: cat.isActive !== undefined ? Boolean(cat.isActive) : true,
           sortOrder: cat.sortOrder,
           count: count
         };
@@ -113,7 +113,13 @@ app.get('/api/settings', async (req, res) => {
       settings.whatsappNumber = '9023374410';
       await settings.save();
     }
-    return res.status(200).json(settings);
+    const payload = settings.toObject ? settings.toObject() : settings;
+    payload.shopBanners = Array.isArray(payload.shopBanners)
+      ? payload.shopBanners.filter(Boolean)
+      : [];
+    payload.shopBanner = payload.shopBanner || payload.shopBanners[0] || '';
+    payload.banners = Array.isArray(payload.banners) ? payload.banners.filter(Boolean) : [];
+    return res.status(200).json(payload);
   } catch (error) {
     console.error('Fetch Settings Error:', error);
     return res.status(500).json({ message: 'Failed to fetch settings' });

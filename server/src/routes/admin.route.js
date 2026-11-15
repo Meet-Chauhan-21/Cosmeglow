@@ -95,6 +95,7 @@ router.put('/products/:id/stock', productController.updateProductStock);
 router.delete('/products/:id', productController.deleteProduct);
 
 // Category CRUD endpoints
+router.get('/categories', productController.getAllCategoriesAdmin);
 router.post('/categories', productController.createCategory);
 router.put('/categories/:id', productController.updateCategory);
 router.delete('/categories/:id', productController.deleteCategory);

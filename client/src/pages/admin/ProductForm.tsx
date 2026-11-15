@@ -14,13 +14,21 @@ import Select from '../../components/admin/Select';
 import { useStore } from '../../context/StoreContext';
 import { getPublicIdFromUrl, deleteCloudinaryAsset } from '../../services/cloudinary';
 import { VideoPlayer, parseVideoUrl } from '../../util/video.util';
+import { compressImage } from '../../util/image.util';
 
 const ProductForm: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams();
   const isEdit = !!id;
   const { accessToken } = useAuth();
+  const { categories, refreshCategories, refreshProducts } = useStore();
   const [loading, setLoading] = useState(isEdit);
+
+  useEffect(() => {
+    if (categories.length === 0) {
+      refreshCategories();
+    }
+  }, [categories.length, refreshCategories]);
 
   interface GalleryImage {
     public_id: string;
@@ -28,6 +36,8 @@ const ProductForm: React.FC = () => {
   }
 
   const [galleryImages, setGalleryImages] = useState<GalleryImage[]>([]);
+  const [descriptionBanners, setDescriptionBanners] = useState<string[]>([]);
+  const [uploadingDescBanner, setUploadingDescBanner] = useState(false);
   const [uploadingField, setUploadingField] = useState<string | null>(null);
 
   const validationSchema = Yup.object({
@@ -56,10 +66,7 @@ const ProductForm: React.FC = () => {
     status: Yup.string().required('Status is required'),
     image: Yup.string().required('Product main image is required'),
     hoverImage: Yup.string().nullable(),
-    rating: Yup.number().typeError('Rating must be a number').min(0, 'Min rating is 0').max(5, 'Max rating is 5').nullable(),
-    reviewsCount: Yup.number().typeError('Reviews count must be an integer').integer('Must be an integer').min(0).nullable(),
     ingredientsText: Yup.string().nullable(),
-    benefitsText: Yup.string().nullable(),
     volume: Yup.string().required('Product volume is required'),
     video: Yup.string().nullable(),
   });
@@ -79,12 +86,12 @@ const ProductForm: React.FC = () => {
       isNewArrival: false,
       image: '',
       hoverImage: '',
-      rating: '',
-      reviewsCount: '',
       ingredientsText: '',
-      benefitsText: '',
       volume: '50ml',
       video: '',
+      directionOfUse: '',
+      additionalInfo: '',
+      whyLoveItText: '',
     },
     validationSchema,
     onSubmit: async (values) => {
@@ -106,21 +113,36 @@ const ProductForm: React.FC = () => {
             'Authorization': `Bearer ${accessToken}`
           },
           body: JSON.stringify({
-            ...values,
+            name: values.name,
+            description: values.description,
+            category: values.category,
             price: parseFloat(values.price),
             oldPrice: values.oldPrice ? parseFloat(values.oldPrice) : null,
             discount: values.discount ? parseInt(values.discount, 10) : 0,
-            stock: parseInt(values.stock),
-            rating: values.rating ? parseFloat(values.rating) : 0,
-            reviewsCount: values.reviewsCount ? parseInt(values.reviewsCount, 10) : 0,
-            images: galleryImages.filter(img => img.url),
-            ingredients: parseList(values.ingredientsText),
-            benefits: parseList(values.benefitsText),
+            stock: parseInt(values.stock, 10),
+            sku: values.sku,
+            status: values.status,
+            isBestSeller: values.isBestSeller,
+            isNewArrival: values.isNewArrival,
+            image: values.image,
             hoverImage: values.hoverImage || values.image,
+            volume: values.volume,
+            video: values.video || '',
+            images: galleryImages.filter((img) => img.url),
+            descriptionBanners: descriptionBanners.filter(Boolean),
+            directionOfUse: values.directionOfUse || '',
+            additionalInfo: values.additionalInfo || '',
+            whyLoveIt: values.whyLoveItText
+              .split('\n')
+              .map((s: string) => s.trim())
+              .filter(Boolean),
+            whyLoveItText: values.whyLoveItText,
+            ingredients: parseList(values.ingredientsText),
           })
         });
 
         if (response.ok) {
+          await refreshProducts();
           toast.success(isEdit ? 'Product updated successfully' : 'Product created successfully');
           navigate('/admin/products');
         } else {
@@ -151,8 +173,9 @@ const ProductForm: React.FC = () => {
     const uploadKey = typeof field === 'number' ? `gallery-${field}` : field;
     setUploadingField(uploadKey);
 
+    const compressed = await compressImage(file, 1400, 0.82);
     const uploadFormData = new FormData();
-    uploadFormData.append('image', file);
+    uploadFormData.append('image', compressed);
 
     try {
       const response = await fetch(`${API_BASE_URL}/admin/upload`, {
@@ -315,13 +338,15 @@ const ProductForm: React.FC = () => {
               isNewArrival: Boolean(product.isNewArrival ?? product.isNew),
               image: product.image,
               hoverImage: product.hoverImage || '',
-              rating: product.rating.toString(),
-              reviewsCount: product.reviewsCount.toString(),
               ingredientsText: product.ingredients?.join('\n') || '',
-              benefitsText: product.benefits?.join('\n') || '',
               volume: product.volume || '50ml',
               video: product.video || '',
+              directionOfUse: product.directionOfUse || '',
+              additionalInfo: product.additionalInfo || '',
+              whyLoveItText: (product.whyLoveIt || []).join('\n'),
             });
+
+            setDescriptionBanners(product.descriptionBanners || []);
 
             const formattedImages = (product.images || []).map((img: any) => {
               if (typeof img === 'string') {
@@ -342,8 +367,6 @@ const ProductForm: React.FC = () => {
     }
   }, [isEdit, id, accessToken]);
 
-  const { categories } = useStore();
-  const activeCategories = categories.filter((c) => c.isActive);
 
   if (loading) {
     return (
@@ -493,7 +516,10 @@ const ProductForm: React.FC = () => {
                         onChange={(val) => formik.setFieldValue('category', val)}
                         error={Boolean(formik.touched.category && formik.errors.category)}
                         placeholder="Select category"
-                        options={activeCategories.map(cat => ({ value: cat._id || cat.id, label: cat.name }))}
+                        options={categories.map((cat) => ({
+                          value: cat._id || cat.id,
+                          label: cat.isActive ? cat.name : `${cat.name} (Hidden on Shop)`
+                        }))}
                       />
                       {formik.touched.category && formik.errors.category && (
                         <p className="text-red-500 text-xs mt-1.5 font-medium pl-1">{formik.errors.category}</p>
@@ -531,46 +557,6 @@ const ProductForm: React.FC = () => {
                       />
                       {formik.touched.sku && formik.errors.sku && (
                         <p className="text-red-500 text-xs mt-1.5 font-medium pl-1">{formik.errors.sku}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Rating</label>
-                      <input
-                        type="number"
-                        name="rating"
-                        step="0.1"
-                        min="0"
-                        max="5"
-                        value={formik.values.rating}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className={`w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${formik.touched.rating && formik.errors.rating ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-indigo-500'
-                          }`}
-                        placeholder="4.8"
-                      />
-                      {formik.touched.rating && formik.errors.rating && (
-                        <p className="text-red-500 text-xs mt-1.5 font-medium pl-1">{formik.errors.rating}</p>
-                      )}
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-2">Reviews Count</label>
-                      <input
-                        type="number"
-                        name="reviewsCount"
-                        min="0"
-                        value={formik.values.reviewsCount}
-                        onChange={formik.handleChange}
-                        onBlur={formik.handleBlur}
-                        className={`w-full px-4 py-3 border rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 ${formik.touched.reviewsCount && formik.errors.reviewsCount ? 'border-red-500 focus:border-red-500' : 'border-gray-200 focus:border-indigo-500'
-                          }`}
-                        placeholder="120"
-                      />
-                      {formik.touched.reviewsCount && formik.errors.reviewsCount && (
-                        <p className="text-red-500 text-xs mt-1.5 font-medium pl-1">{formik.errors.reviewsCount}</p>
                       )}
                     </div>
                   </div>
@@ -650,8 +636,32 @@ const ProductForm: React.FC = () => {
                 </div>
               </Card>
 
-              <Card title="Ingredients & Benefits">
+              <Card title="Product Details & Usage">
                 <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Why you’ll love it? (One point per line)</label>
+                    <textarea
+                      name="whyLoveItText"
+                      value={formik.values.whyLoveItText}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 min-h-[100px] resize-none font-sans text-xs"
+                      placeholder="e.g. Comes with a built-in cellular restoration formula&#10;Infused with 10% Bio-Peptides &amp; Ceramides&#10;Deeply hydrates and strengthens natural skin barrier"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Direction of Use</label>
+                    <textarea
+                      name="directionOfUse"
+                      value={formik.values.directionOfUse}
+                      onChange={formik.handleChange}
+                      onBlur={formik.handleBlur}
+                      className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 min-h-[100px] resize-none font-sans text-xs"
+                      placeholder="Instructions on how to apply and massage the formula..."
+                    />
+                  </div>
+
                   <div>
                     <label className="block text-sm font-semibold text-gray-700 mb-2">Ingredients</label>
                     <textarea
@@ -659,22 +669,96 @@ const ProductForm: React.FC = () => {
                       value={formik.values.ingredientsText}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 min-h-[120px] resize-none"
-                      placeholder="One ingredient per line"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 min-h-[100px] resize-none font-sans text-xs"
+                      placeholder="Ingredients list or one ingredient per line"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">Benefits</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Additional Information</label>
                     <textarea
-                      name="benefitsText"
-                      value={formik.values.benefitsText}
+                      name="additionalInfo"
+                      value={formik.values.additionalInfo}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 min-h-[120px] resize-none"
-                      placeholder="One benefit per line"
+                      className="w-full px-4 py-3 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 min-h-[90px] resize-none font-sans text-xs"
+                      placeholder="Net volume, storage, country of origin, manufacturing details..."
                     />
                   </div>
+                </div>
+              </Card>
+
+              {/* Description Banner Images Card */}
+              <Card title="Description Banner Images (Promo Graphics)">
+                <div className="space-y-3">
+                  <p className="text-xs text-gray-500 font-sans leading-normal">
+                    Upload full-width promo banner images displayed inside the product's <strong>Description</strong> tab (refer to Renee/brand promo layout). Multiple banners will be stacked vertically.
+                  </p>
+
+                  <div className="flex flex-wrap gap-2">
+                    <label className={`px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 cursor-pointer shadow-xs transition select-none ${uploadingDescBanner ? 'opacity-85 cursor-wait' : ''}`}>
+                      {uploadingDescBanner ? (
+                        <>
+                          <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                          <span>Uploading Banner...</span>
+                        </>
+                      ) : (
+                        <span>+ Add Description Banner</span>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={uploadingDescBanner}
+                        onChange={async (e) => {
+                          const file = e.target.files?.[0];
+                          if (!file) return;
+                          setUploadingDescBanner(true);
+                          try {
+                            const compressed = await compressImage(file, 1400, 0.7);
+                            const formData = new FormData();
+                            formData.append('image', compressed);
+                            formData.append('folder', 'CosmeGlow/description-banners');
+                            const res = await fetch(`${API_BASE_URL}/admin/upload`, {
+                              method: 'POST',
+                              headers: { 'Authorization': `Bearer ${accessToken}` },
+                              body: formData
+                            });
+                            if (res.ok) {
+                              const data = await res.json();
+                              setDescriptionBanners((prev) => [...prev, data.url]);
+                              toast.success('Description banner added!');
+                            } else {
+                              toast.error('Failed to upload banner');
+                            }
+                          } catch (err) {
+                            toast.error('Upload error');
+                          } finally {
+                            setUploadingDescBanner(false);
+                            e.target.value = '';
+                          }
+                        }}
+                        className="hidden"
+                      />
+                    </label>
+                  </div>
+
+                  {descriptionBanners.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                      {descriptionBanners.map((url, idx) => (
+                        <div key={idx} className="relative rounded-xl overflow-hidden border border-gray-200 group bg-slate-50">
+                          <img src={url} alt={`Banner ${idx + 1}`} className="w-full h-24 object-cover" />
+                          <button
+                            type="button"
+                            onClick={() => setDescriptionBanners((prev) => prev.filter((_, i) => i !== idx))}
+                            className="absolute top-2 right-2 p-1 bg-red-600 hover:bg-red-700 text-white rounded-full shadow-xs cursor-pointer"
+                            title="Remove Banner"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </Card>
             </div>
