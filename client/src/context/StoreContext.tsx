@@ -15,6 +15,8 @@ interface StoreContextType {
   isCartOpen: boolean;
   isWishlistOpen: boolean;
   settings: AppSettings;
+  /** true once settings are known (from cache or from the API) */
+  settingsLoaded: boolean;
   addToCart: (product: Product, quantity: number, size?: string) => void;
   removeFromCart: (productId: string, size: string) => void;
   updateCartQuantity: (productId: string, size: string, quantity: number) => void;
@@ -51,6 +53,14 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [activeProduct, setActiveProductState] = useState<Product | null>(null);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isWishlistOpen, setIsWishlistOpen] = useState(false);
+
+  const [settingsLoaded, setSettingsLoaded] = useState<boolean>(() => {
+    try {
+      return !!localStorage.getItem('cosmeglow_settings');
+    } catch {
+      return false;
+    }
+  });
 
   const [settings, setSettings] = useState<AppSettings>(() => {
     try {
@@ -212,6 +222,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         }
       } catch (err) {
         console.error('Error fetching global settings:', err);
+      } finally {
+        setSettingsLoaded(true);
       }
     };
     fetchSettings();
@@ -354,6 +366,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         isCartOpen,
         isWishlistOpen,
         settings,
+        settingsLoaded,
         addToCart,
         removeFromCart,
         updateCartQuantity,

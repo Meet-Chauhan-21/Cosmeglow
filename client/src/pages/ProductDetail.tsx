@@ -86,7 +86,15 @@ const DescriptionBannerItem: React.FC<DescriptionBannerItemProps> = ({ url, alt 
   );
 };
 
+// Remount the page whenever the product id changes so no state (fetched
+// product, reviews, selected image/size) from the previous product leaks
+// into the first render of the newly selected one.
 export const ProductDetail: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
+  return <ProductDetailContent key={id} />;
+};
+
+const ProductDetailContent: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { cart, addToCart, updateCartQuantity, toggleWishlist, isInWishlist, setIsCartOpen, products, productsLoading } = useStore();
@@ -139,7 +147,8 @@ export const ProductDetail: React.FC = () => {
       setActiveTab('desc');
       setSelectedImageIndex(0);
     }
-  }, [id, product]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, product?.id]);
 
   // Fetch reviews
   useEffect(() => {

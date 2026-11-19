@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import BannerSlider, { type BannerSlide } from '../components/common/BannerSlider';
 import { Link, useSearchParams } from 'react-router-dom';
 import SEO from '../components/common/SEO';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -336,52 +337,34 @@ export const Shop: React.FC = () => {
     return [];
   }, [settings.shopBanners, settings.shopBanner]);
 
-  const [currentBannerIndex, setCurrentBannerIndex] = useState(0);
+  const shopSlides: BannerSlide[] = useMemo(
+    () =>
+      shopBannersList.map((bannerUrl, idx) => ({
+        key: `${idx}-${bannerUrl}`,
+        content: (
+          <img
+            src={bannerUrl}
+            alt={`Shop Banner ${idx + 1}`}
+            className="w-full h-full object-cover object-center pointer-events-none"
+            loading="eager"
+            decoding="async"
+            draggable={false}
+            fetchPriority={idx === 0 ? 'high' : 'auto'}
+          />
+        )
+      })),
+    [shopBannersList]
+  );
 
-  // Auto-slide every 3 seconds (continuous auto-scroll, mouse hover does not stop)
-  useEffect(() => {
-    if (shopBannersList.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentBannerIndex((prev) => (prev + 1) % shopBannersList.length);
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [shopBannersList.length]);
-
-  const shopBannerSection = shopBannersList.length > 0 && (
-        <div className="relative w-full h-36 sm:h-56 md:h-72 lg:h-80 overflow-hidden bg-white select-none">
-          {shopBannersList.map((bannerUrl, idx) => (
-            <div
-              key={bannerUrl}
-              className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
-                idx === currentBannerIndex ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'
-              }`}
-            >
-              <img
-                src={bannerUrl}
-                alt={`Shop Banner ${idx + 1}`}
-                className="w-full h-full object-cover object-center"
-                loading={idx === 0 ? 'eager' : 'lazy'}
-                decoding="async"
-              />
-            </div>
-          ))}
-
-          {shopBannersList.length > 1 && (
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 bg-black/35 backdrop-blur-xs px-2.5 py-1 rounded-full">
-              {shopBannersList.map((_, idx) => (
-                <button
-                  key={idx}
-                  type="button"
-                  onClick={() => setCurrentBannerIndex(idx)}
-                  className={`transition-all rounded-full ${
-                    idx === currentBannerIndex ? 'w-5 h-1.5 bg-white' : 'w-1.5 h-1.5 bg-white/50 hover:bg-white/80'
-                  }`}
-                  aria-label={`Go to banner slide ${idx + 1}`}
-                />
-              ))}
-            </div>
-          )}
-        </div>
+  const shopBannerSection = shopSlides.length > 0 && (
+    <BannerSlider
+      slides={shopSlides}
+      heightClassName="h-36 sm:h-56 md:h-72 lg:h-80"
+      autoplayMs={3000}
+      pauseOnHover={false}
+      showArrows={false}
+      ariaLabel="Shop banners"
+    />
   );
 
   if (productsLoading && products.length === 0) {

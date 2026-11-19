@@ -231,34 +231,87 @@ export const Checkout: React.FC = () => {
   const [addressErrors, setAddressErrors] = useState<Record<string, string>>({});
   const [touchedFields, setTouchedFields] = useState<Record<string, boolean>>({});
 
+  const validateAddressField = (field: string, form = newAddressForm): string => {
+    switch (field) {
+      case 'name': {
+        const v = form.name.trim();
+        if (!v) return 'Recipient full name is required';
+        if (v.length < 2) return 'Name must be at least 2 characters';
+        if (!/^[A-Za-z][A-Za-z .'-]*$/.test(v)) return 'Name can contain only letters, spaces, dot and hyphen';
+        return '';
+      }
+      case 'street': {
+        const v = form.street.trim();
+        if (!v) return 'Street address is required';
+        if (v.length < 5) return 'Please enter full street address (min 5 characters)';
+        return '';
+      }
+      case 'country':
+        return form.country ? '' : 'Please select a country';
+      case 'state':
+        return form.state ? '' : 'Please select a state';
+      case 'district':
+        return form.district ? '' : 'Please select a district';
+      case 'zip': {
+        const v = form.zip.replace(/\D/g, '');
+        if (!v) return 'Pincode is required';
+        if (form.country === 'India') {
+          if (v.length !== 6) return 'Pincode must be exactly 6 digits';
+          if (v.startsWith('0')) return 'Pincode cannot start with 0';
+        } else if (v.length < 4) {
+          return 'Please enter a valid postal code';
+        }
+        return '';
+      }
+      default:
+        return '';
+    }
+  };
+
+  const ADDRESS_FIELDS = ['name', 'street', 'country', 'state', 'district', 'zip'] as const;
+
   const validateAddressForm = (form = newAddressForm) => {
     const errs: Record<string, string> = {};
-    if (!form.name || form.name.trim().length < 2) {
-      errs.name = 'Please enter recipient full name (min 2 letters)';
-    }
-    if (!form.street || form.street.trim().length < 5) {
-      errs.street = 'Please enter full street address (min 5 characters)';
-    }
-    if (!form.country) {
-      errs.country = 'Country selection is required';
-    }
-    if (!form.state) {
-      errs.state = 'State selection is required';
-    }
-    if (!form.district) {
-      errs.district = 'District selection is required';
-    }
-    const zipClean = form.zip.replace(/\D/g, '');
-    if (!zipClean || zipClean.length !== 6) {
-      errs.zip = 'ZIP / Pincode must be exactly 6 digits';
-    }
+    ADDRESS_FIELDS.forEach((f) => {
+      const msg = validateAddressField(f, form);
+      if (msg) errs[f] = msg;
+    });
     return errs;
+  };
+
+  // Update one or more fields, then live-validate only the changed fields
+  // against the NEW values (avoids stale-state errors on dropdown select).
+  const updateAddressFields = (changes: Partial<typeof newAddressForm>, markTouched = false) => {
+    const updated = { ...newAddressForm, ...changes };
+    setNewAddressForm(updated);
+    const changedKeys = Object.keys(changes);
+    if (markTouched) {
+      setTouchedFields((prev) => {
+        const next = { ...prev };
+        changedKeys.forEach((k) => (next[k] = true));
+        return next;
+      });
+    }
+    setAddressErrors((prev) => {
+      const next = { ...prev };
+      changedKeys.forEach((k) => {
+        const msg = validateAddressField(k, updated);
+        if (msg) next[k] = msg;
+        else delete next[k];
+      });
+      return next;
+    });
   };
 
   const handleBlurField = (field: string) => {
     setTouchedFields((prev) => ({ ...prev, [field]: true }));
-    const errs = validateAddressForm();
-    setAddressErrors(errs);
+    setAddressErrors((prev) => {
+      const next = { ...prev };
+      const msg = validateAddressField(field);
+      if (msg) next[field] = msg;
+      else delete next[field];
+      return next;
+    });
   };
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -310,37 +363,48 @@ export const Checkout: React.FC = () => {
   const districtOptions = selectedStateObj ? selectedStateObj.districts : [];
 
   const handleCountryChange = (val: string) => {
-    setNewAddressForm({
-      ...newAddressForm,
-      country: val,
-      state: '',
-      district: ''
+    // Only the country is marked touched; state/district errors stay hidden
+    // until the user interacts with them (or submits).
+    const updated = { ...newAddressForm, country: val, state: '', district: '' };
+    setNewAddressForm(updated);
+    setTouchedFields((prev) => ({ ...prev, country: true }));
+    setAddressErrors((prev) => {
+      const next = { ...prev };
+      (['country', 'state', 'district', 'zip'] as const).forEach((k) => {
+        const msg = validateAddressField(k, updated);
+        if (msg) next[k] = msg;
+        else delete next[k];
+      });
+      return next;
     });
   };
 
   const handleStateChange = (val: string) => {
-    setNewAddressForm({
-      ...newAddressForm,
-      state: val,
-      district: ''
+    const updated = { ...newAddressForm, state: val, district: '' };
+    setNewAddressForm(updated);
+    setTouchedFields((prev) => ({ ...prev, state: true }));
+    setAddressErrors((prev) => {
+      const next = { ...prev };
+      (['state', 'district'] as const).forEach((k) => {
+        const msg = validateAddressField(k, updated);
+        if (msg) next[k] = msg;
+        else delete next[k];
+      });
+      return next;
     });
   };
 
   const handleDistrictChange = (val: string) => {
-    setNewAddressForm({
-      ...newAddressForm,
-      district: val
-    });
+    updateAddressFields({ district: val }, true);
   };
 
   const processOrderSuccess = async (result: any, shippingAddress: any, txId?: string) => {
     // Save the new address to the user's saved addresses
+    // Fire-and-forget so the success screen is not delayed by this request.
     if (useNewAddress && addAddress) {
-      try {
-        await addAddress(shippingAddress);
-      } catch (addrErr) {
-        console.error('Failed to save new address during checkout:', addrErr);
-      }
+      Promise.resolve(addAddress(shippingAddress)).catch((addrErr) =>
+        console.error('Failed to save new address during checkout:', addrErr)
+      );
     }
 
     const exactTotal = result?.order?.totals?.total || total;
@@ -911,11 +975,7 @@ export const Checkout: React.FC = () => {
                           placeholder="Enter recipient full name"
                           value={newAddressForm.name}
                           onBlur={() => handleBlurField('name')}
-                          onChange={(e) => {
-                            const updated = { ...newAddressForm, name: e.target.value };
-                            setNewAddressForm(updated);
-                            if (touchedFields.name) setAddressErrors(validateAddressForm(updated));
-                          }}
+                          onChange={(e) => updateAddressFields({ name: e.target.value })}
                           className={`w-full border px-4 py-3 text-sm rounded-xl text-dark focus:outline-none font-sans bg-light-gray/10 transition-colors ${
                             touchedFields.name && addressErrors.name
                               ? 'border-red-500 focus:border-red-500'
@@ -937,11 +997,7 @@ export const Checkout: React.FC = () => {
                           placeholder="Enter house/flat no., street, area, landmark"
                           value={newAddressForm.street}
                           onBlur={() => handleBlurField('street')}
-                          onChange={(e) => {
-                            const updated = { ...newAddressForm, street: e.target.value };
-                            setNewAddressForm(updated);
-                            if (touchedFields.street) setAddressErrors(validateAddressForm(updated));
-                          }}
+                          onChange={(e) => updateAddressFields({ street: e.target.value })}
                           className={`w-full border px-4 py-3 text-sm rounded-xl text-dark focus:outline-none font-sans bg-light-gray/10 transition-colors ${
                             touchedFields.street && addressErrors.street
                               ? 'border-red-500 focus:border-red-500'
@@ -961,10 +1017,8 @@ export const Checkout: React.FC = () => {
                             required
                             options={countryOptions}
                             value={newAddressForm.country}
-                            onChange={(val) => {
-                              handleCountryChange(val);
-                              handleBlurField('country');
-                            }}
+                            hasError={!!(touchedFields.country && addressErrors.country)}
+                            onChange={(val) => handleCountryChange(val)}
                           />
                           {touchedFields.country && addressErrors.country && (
                             <span className="text-[10px] text-red-500 font-medium font-sans mt-1 block">{addressErrors.country}</span>
@@ -977,10 +1031,8 @@ export const Checkout: React.FC = () => {
                             required
                             options={stateOptions}
                             value={newAddressForm.state}
-                            onChange={(val) => {
-                              handleStateChange(val);
-                              handleBlurField('state');
-                            }}
+                            hasError={!!(touchedFields.state && addressErrors.state)}
+                            onChange={(val) => handleStateChange(val)}
                             placeholder={newAddressForm.country ? "Select State" : "Choose Country first"}
                             disabled={!newAddressForm.country}
                           />
@@ -995,10 +1047,8 @@ export const Checkout: React.FC = () => {
                             required
                             options={districtOptions}
                             value={newAddressForm.district}
-                            onChange={(val) => {
-                              handleDistrictChange(val);
-                              handleBlurField('district');
-                            }}
+                            hasError={!!(touchedFields.district && addressErrors.district)}
+                            onChange={(val) => handleDistrictChange(val)}
                             placeholder={newAddressForm.state ? "Select District" : "Choose State first"}
                             disabled={!newAddressForm.state}
                           />
@@ -1019,13 +1069,10 @@ export const Checkout: React.FC = () => {
                           value={newAddressForm.zip}
                           onBlur={() => handleBlurField('zip')}
                           onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, '');
-                            if (val.length <= 6) {
-                              const updated = { ...newAddressForm, zip: val };
-                              setNewAddressForm(updated);
-                              if (touchedFields.zip) setAddressErrors(validateAddressForm(updated));
-                            }
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                            updateAddressFields({ zip: val });
                           }}
+                          inputMode="numeric"
                           maxLength={6}
                           className={`w-full border px-4 py-3 text-sm rounded-xl text-dark focus:outline-none font-sans bg-light-gray/10 transition-colors ${
                             touchedFields.zip && addressErrors.zip

@@ -54,7 +54,7 @@ export const Testimonials: React.FC = () => {
   }, []);
 
   return (
-    <section id="testimonials" className="py-20 bg-light-gray/40 relative overflow-hidden">
+    <section id="testimonials" className="pt-16 pb-8 sm:pt-20 sm:pb-10 bg-light-gray/40 relative overflow-hidden">
       {/* Background visual asset */}
       <div className="absolute left-0 bottom-0 w-[400px] h-[400px] rounded-full bg-secondary/3 blur-[80px] -z-10" />
 
@@ -65,7 +65,7 @@ export const Testimonials: React.FC = () => {
           description="Read genuine verified reviews and experiences from real customers using our organic botanical treatments."
         />
 
-        <div className="pb-12">
+        <div>
           <Swiper
             modules={[Pagination, Autoplay]}
             spaceBetween={30}
@@ -86,7 +86,7 @@ export const Testimonials: React.FC = () => {
                 slidesPerView: 3,
               },
             }}
-            className="testimonial-swiper !pb-14"
+            className="testimonial-swiper !pb-10"
           >
             {reviewsList.map((testimonial) => (
               <SwiperSlide key={testimonial.id} className="h-auto">

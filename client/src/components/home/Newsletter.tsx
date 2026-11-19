@@ -100,7 +100,7 @@ export const Newsletter: React.FC = () => {
   });
 
   return (
-    <section id="contact" className="py-24 bg-white relative overflow-hidden font-sans border-t border-slate-100">
+    <section id="contact" className="pt-14 pb-20 sm:pt-16 sm:pb-24 bg-white relative overflow-hidden font-sans border-t border-slate-100">
       <Container>
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center">
 

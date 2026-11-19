@@ -137,8 +137,10 @@ const createOrder = async (req, res) => {
 
     // Pre-validate product stock before proceeding
     const Product = require('../models/product.model');
-    for (const item of items) {
-      const dbProduct = await Product.findById(item.productId);
+    const dbProducts = await Promise.all(items.map((item) => Product.findById(item.productId)));
+    for (let idx = 0; idx < items.length; idx++) {
+      const item = items[idx];
+      const dbProduct = dbProducts[idx];
       if (!dbProduct) {
         return res.status(400).json({ message: `Product "${item.name}" was not found.` });
       }
@@ -247,6 +249,42 @@ const createOrder = async (req, res) => {
       status: 'Pending'
     });
 
+    // Decrement stock right away (fast DB ops) so inventory stays accurate.
+    const lowStockProducts = [];
+    try {
+      await Promise.all(
+        order.items.map(async (item) => {
+          const product = await Product.findById(item.productId);
+          if (product && product.stock !== undefined && product.stock !== null) {
+            product.stock = Math.max(0, product.stock - item.quantity);
+            await product.save();
+            if (product.stock <= 10) lowStockProducts.push(product);
+          }
+        })
+      );
+    } catch (stockError) {
+      console.error('Failed to decrement stock:', stockError);
+    }
+
+    // Respond to the customer immediately. Notifications, emails and the
+    // Shiprocket push are slow (SMTP / external API) and run in the background.
+    res.status(201).json({
+      message: 'Order created successfully',
+      order
+    });
+
+    runPostOrderTasks({ order, shippingAddress, paymentData, totals, userEmail, lowStockProducts }).catch((bgErr) =>
+      console.error('Post-order background tasks failed:', bgErr)
+    );
+    return undefined;
+  } catch (error) {
+    console.error('Create Order Error:', error);
+    if (res.headersSent) return undefined;
+    return res.status(500).json({ message: 'Server error. Failed to create order.' });
+  }
+};
+
+const runPostOrderTasks = async ({ order, shippingAddress, paymentData, totals, userEmail, lowStockProducts }) => {
     // Create notification for admin
     try {
       const Notification = require('../models/notification.model');
@@ -260,40 +298,33 @@ const createOrder = async (req, res) => {
       console.error('Failed to create order notification:', notificationError);
     }
 
-    // Handle stock decrement and low stock notification if applicable
+    // Low stock notifications
     try {
-      const Product = require('../models/product.model');
       const Notification = require('../models/notification.model');
-      for (const item of order.items) {
-        const product = await Product.findById(item.productId);
-        if (product) {
-          if (product.stock !== undefined && product.stock !== null) {
-            product.stock = Math.max(0, product.stock - item.quantity);
-            await product.save();
-            if (product.stock <= 10) {
-              await Notification.create({
-                type: 'low_stock',
-                title: 'Low Stock Alert',
-                message: `Product "${product.name}" has low stock (${product.stock} units remaining).`,
-                link: `/admin/products/${product._id}`
-              });
-            }
-          }
-        }
-      }
+      await Promise.all(
+        lowStockProducts.map((product) =>
+          Notification.create({
+            type: 'low_stock',
+            title: 'Low Stock Alert',
+            message: `Product "${product.name}" has low stock (${product.stock} units remaining).`,
+            link: `/admin/products/${product._id}`
+          })
+        )
+      );
     } catch (stockError) {
-      console.error('Failed to decrement stock / create low stock notification:', stockError);
+      console.error('Failed to create low stock notification:', stockError);
     }
 
-    // Send Emails (Customer Confirmation & Admin Alert)
+    // Send Emails (Customer Confirmation & Admin Alert) in parallel
     try {
       const settings = await Settings.findOne();
       const adminEmail = settings?.email || 'dabhisanjay901@gmail.com';
-      
-      if (userEmail) {
-        await sendOrderConfirmationEmail(order, userEmail);
-      }
-      await sendAdminNewOrderEmail(order, adminEmail);
+      const emailJobs = [sendAdminNewOrderEmail(order, adminEmail)];
+      if (userEmail) emailJobs.push(sendOrderConfirmationEmail(order, userEmail));
+      const results = await Promise.allSettled(emailJobs);
+      results
+        .filter((r) => r.status === 'rejected')
+        .forEach((r) => console.error('Failed to dispatch order email:', r.reason));
     } catch (emailError) {
       console.error('Failed to dispatch order emails:', emailError);
     }
@@ -355,15 +386,6 @@ const createOrder = async (req, res) => {
     } catch (shipError) {
       console.error('Failed to auto-create Shiprocket order upon checkout:', shipError.message || shipError);
     }
-
-    return res.status(201).json({
-      message: 'Order created successfully',
-      order
-    });
-  } catch (error) {
-    console.error('Create Order Error:', error);
-    return res.status(500).json({ message: 'Server error. Failed to create order.' });
-  }
 };
 
 // @desc    List orders for the logged-in user

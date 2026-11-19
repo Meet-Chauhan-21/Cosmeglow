@@ -9,6 +9,7 @@ interface SearchableDropdownProps {
   placeholder?: string;
   disabled?: boolean;
   required?: boolean;
+  hasError?: boolean;
 }
 
 export const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
@@ -18,7 +19,8 @@ export const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
   onChange,
   placeholder = 'Select option...',
   disabled = false,
-  required = false
+  required = false,
+  hasError = false
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -71,7 +73,9 @@ export const SearchableDropdown: React.FC<SearchableDropdownProps> = ({
         className={`w-full border flex items-center justify-between px-4 py-3 text-sm rounded-xl text-left font-sans transition-all shadow-xs cursor-pointer ${
           disabled
             ? 'bg-gray-100 text-gray-400 border-border-gray/50 cursor-not-allowed'
-            : 'border-border-gray/80 bg-light-gray/20 text-dark hover:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary'
+            : hasError
+              ? 'border-red-500 bg-light-gray/20 text-dark focus:outline-none focus:ring-1 focus:ring-red-500'
+              : 'border-border-gray/80 bg-light-gray/20 text-dark hover:border-primary/50 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary'
         }`}
       >
         <span className={value ? 'text-dark' : 'text-gray-400'}>
