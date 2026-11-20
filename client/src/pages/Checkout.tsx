@@ -16,6 +16,7 @@ import { PaymentSuccessModal } from '../components/checkout/PaymentSuccessModal'
 import { OtpInput } from '../components/common/OtpInput';
 
 import { API_BASE_URL } from '../config';
+import { trackInitiateCheckout, trackAddPaymentInfo, trackPurchase } from '../util/metaPixel';
 
 const formatWhatsAppMessage = (
   orderNumber: string,
@@ -355,6 +356,15 @@ export const Checkout: React.FC = () => {
 
   const total = subtotal + shipping + tax;
 
+  // Meta Pixel: InitiateCheckout when the checkout page opens with items in the cart
+  // (Buy Now, Proceed to Checkout from the cart, or any other link here).
+  // Refreshing or re-opening with the same cart does not fire it again.
+  React.useEffect(() => {
+    if (cart.length > 0) trackInitiateCheckout(cart, total);
+    // Fire once when the checkout opens, not on every cart/settings re-render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Cascading Address Dropdowns for new addresses
   const countryOptions = locationData.map((c) => c.name);
   const selectedCountryObj = locationData.find((c) => c.name === newAddressForm.country);
@@ -406,6 +416,9 @@ export const Checkout: React.FC = () => {
         console.error('Failed to save new address during checkout:', addrErr)
       );
     }
+
+    // Meta Pixel: Purchase — only for the order the server just confirmed
+    trackPurchase(result?.order);
 
     const exactTotal = result?.order?.totals?.total || total;
     setConfirmedTotal(exactTotal);
@@ -560,6 +573,10 @@ export const Checkout: React.FC = () => {
             color: settings.themeColor || '#581C87'
           },
           handler: async function (response: any) {
+            // Meta Pixel: AddPaymentInfo — payment details were submitted successfully
+            // in the Razorpay popup (only the payment id is used as a reference).
+            trackAddPaymentInfo(cart, total, response.razorpay_payment_id);
+
             // Step 3 & 4: Payment Success -> Send parameters to backend for HMAC Signature Verification
             setIsVerifying(true);
             try {
@@ -631,6 +648,8 @@ export const Checkout: React.FC = () => {
 
         setIsSubmitting(false);
         if (result) {
+          // Meta Pixel: AddPaymentInfo — COD payment choice accepted with the order
+          trackAddPaymentInfo(cart, result.order?.totals?.total ?? total, `cod-${result.order?.orderNumber}`);
           await processOrderSuccess(result, shippingAddress);
         }
       } catch (err) {
@@ -1120,19 +1139,6 @@ export const Checkout: React.FC = () => {
                           <span className="bg-primary/10 px-2 py-0.5 rounded text-[9px] font-semibold text-primary">Instant Verification</span>
                         </div>
                       </div>
-                      
-                      {paymentMethod === 'razorpay' && (
-                        <div className="mt-4 pl-8 space-y-3 animate-fade-in-up">
-                          <p className="text-xs text-gray-500 font-sans leading-relaxed">
-                            Clicking <strong>Pay & Place Order</strong> opens the official Razorpay Checkout popup. Your payment is verified securely before order confirmation.
-                          </p>
-                          <div className="flex flex-wrap gap-2 text-[9px] font-medium text-gray-500">
-                            <span className="bg-white border border-gray-200 px-2 py-0.5 rounded">UPI / GPay / PhonePe</span>
-                            <span className="bg-white border border-gray-200 px-2 py-0.5 rounded">Visa / Mastercard / RuPay</span>
-                            <span className="bg-white border border-gray-200 px-2 py-0.5 rounded">NetBanking</span>
-                          </div>
-                        </div>
-                      )}
                     </div>
                   )}
 
@@ -1158,14 +1164,6 @@ export const Checkout: React.FC = () => {
                           <span className="bg-emerald-50 text-emerald-750 border border-emerald-200/50 px-2 py-0.5 rounded text-[9px] font-semibold">Pay on Delivery</span>
                         </div>
                       </div>
-                      
-                      {paymentMethod === 'cod' && (
-                        <div className="mt-4 pl-8 space-y-2 animate-fade-in-up">
-                          <p className="text-xs text-gray-500 font-sans leading-relaxed">
-                            You will pay the total amount of <strong className="text-primary font-bold">₹{total.toFixed(2)}</strong> in cash or via mobile UPI QR scan to the courier agent upon arrival.
-                          </p>
-                        </div>
-                      )}
                     </div>
                   )}
 
@@ -1190,7 +1188,7 @@ export const Checkout: React.FC = () => {
                         <span>Verifying & Processing...</span>
                       </span>
                     ) : (
-                      <span>{paymentMethod === 'razorpay' ? `Pay ₹${total.toFixed(2)} via Razorpay` : 'Confirm COD Order'}</span>
+                      <span>{paymentMethod === 'razorpay' ? `Pay ₹${total.toFixed(2)}` : 'Confirm COD Order'}</span>
                     )}
                   </Button>
                 </div>

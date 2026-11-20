@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import SEO, { ensureAbsoluteUrl } from '../components/common/SEO';
 import { Star, Heart, ShoppingBag, Plus, Minus, Check, ArrowLeft, Zap } from 'lucide-react';
 import { toast } from 'sonner';
@@ -13,6 +13,7 @@ import { useAuth } from '../context/AuthContext';
 import { API_BASE_URL } from '../config';
 import { VideoPlayer } from '../util/video.util';
 import { fetchPublicProductById } from '../services/products';
+import { trackViewContent } from '../util/metaPixel';
 import type { Product } from '../types';
 
 const renderVideoPlayer = (url: string) => {
@@ -97,6 +98,7 @@ export const ProductDetail: React.FC = () => {
 const ProductDetailContent: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const { cart, addToCart, updateCartQuantity, toggleWishlist, isInWishlist, setIsCartOpen, products, productsLoading } = useStore();
   const { accessToken } = useAuth();
 
@@ -149,6 +151,11 @@ const ProductDetailContent: React.FC = () => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, product?.id]);
+
+  // Meta Pixel: ViewContent once the product details are loaded (once per visit)
+  useEffect(() => {
+    if (product) trackViewContent(product, location.key);
+  }, [product, location.key]);
 
   // Fetch reviews
   useEffect(() => {

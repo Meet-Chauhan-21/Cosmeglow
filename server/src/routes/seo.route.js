@@ -22,7 +22,7 @@ router.get('/sitemap.xml', async (req, res) => {
     const staticPages = [
       { url: '', priority: '1.0', changefreq: 'daily' },
       { url: '/shop', priority: '0.9', changefreq: 'daily' },
-      { url: '/terms-and-conditions', priority: '0.3', changefreq: 'monthly' },
+      { url: '/terms-conditions', priority: '0.3', changefreq: 'monthly' },
       { url: '/privacy-policy', priority: '0.3', changefreq: 'monthly' }
     ];
 

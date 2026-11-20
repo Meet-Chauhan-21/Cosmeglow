@@ -20,8 +20,12 @@
       t.src=v;s=b.getElementsByTagName(e)[0];
       s.parentNode.insertBefore(t,s)}(window,document,'script',
       'https://connect.facebook.net/en_US/fbevents.js');
+      // Turn off Meta's automatic event detection (it creates the generic
+      // "SubscribedButtonClick" events). Must run before init.
+      fbq('set', 'autoConfig', false, '1118528594309235');
       fbq('init', '1118528594309235');
-      fbq('track', 'PageView');
+      // PageView and all e-commerce events are sent by the app on real
+      // route changes / successful actions — see src/util/metaPixel.ts
     </script>
     <!-- End Facebook Pixel Code -->
     <script>

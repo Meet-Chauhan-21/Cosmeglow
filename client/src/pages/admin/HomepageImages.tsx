@@ -598,7 +598,7 @@ const HomepageImages: React.FC = () => {
                 <div className="bg-slate-50 border border-slate-100 rounded-2xl p-4 space-y-1">
                   <span className="text-xs font-bold text-gray-700 block">Shop Page Banners</span>
                   <p className="text-[11px] text-gray-400 leading-normal font-sans">
-                    These banners auto-scroll every 3 seconds on the <strong>/shop</strong> page. Upload wide landscape images (recommended: 1920×600px).
+                    These banners auto-scroll every 3 seconds on the <strong>/shop</strong> page. Upload wide landscape images (recommended: 1920×320px, keep text inside the center 760×240px).
                   </p>
                 </div>
 

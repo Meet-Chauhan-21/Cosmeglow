@@ -1,8 +1,9 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { Product, Category, AppSettings, CartItem } from '../types';
 import { fallbackProducts, fetchPublicProducts } from '../services/products';
 import { API_BASE_URL } from '../config';
 import { toast } from 'sonner';
+import { trackAddToCart } from '../util/metaPixel';
 
 interface StoreContextType {
   cart: CartItem[];
@@ -38,6 +39,8 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const saved = localStorage.getItem('cosmeglow_cart');
     return saved ? JSON.parse(saved) : [];
   });
+  // Always holds the latest cart (used by addToCart for event tracking)
+  const cartRef = useRef<CartItem[]>(cart);
 
   const [products, setProducts] = useState<Product[]>(fallbackProducts);
   const [productsLoading, setProductsLoading] = useState(true);
@@ -232,6 +235,7 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
 
   // Sync to local storage
   useEffect(() => {
+    cartRef.current = cart;
     localStorage.setItem('cosmeglow_cart', JSON.stringify(cart));
   }, [cart]);
 
@@ -273,35 +277,29 @@ export const StoreProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     const finalSize = size || product.volume || '50ml';
     const maxStock = product.stock ?? Infinity;
 
-    setCart((prevCart) => {
-      const existingIdx = prevCart.findIndex(
-        (item) => item.product.id === product.id && item.selectedSize === finalSize
-      );
+    // Work out the new cart outside the state updater so the Meta AddToCart
+    // event fires exactly once, and only for the quantity really added.
+    const prevCart = cartRef.current;
+    const existingIdx = prevCart.findIndex(
+      (item) => item.product.id === product.id && item.selectedSize === finalSize
+    );
+    const existingQty = existingIdx > -1 ? prevCart[existingIdx].quantity : 0;
 
-      if (existingIdx > -1) {
-        const existingQty = prevCart[existingIdx].quantity;
-        const newQty = existingQty + quantity;
-        if (newQty > maxStock) {
-          toast.error(`Only ${maxStock} units of "${product.name}" are available in stock.`);
-          return prevCart.map((item, idx) =>
-            idx === existingIdx
-              ? { ...item, quantity: maxStock }
-              : item
-          );
-        }
-        return prevCart.map((item, idx) =>
-          idx === existingIdx
-            ? { ...item, quantity: newQty }
-            : item
-        );
-      }
+    if (existingQty + quantity > maxStock) {
+      toast.error(`Only ${maxStock} units of "${product.name}" are available in stock.`);
+    }
+    const newQty = Math.min(existingQty + quantity, maxStock);
+    const quantityAdded = newQty - existingQty;
+    if (quantityAdded <= 0) return;
 
-      const initialQty = Math.min(quantity, maxStock);
-      if (quantity > maxStock) {
-        toast.error(`Only ${maxStock} units of "${product.name}" are available in stock.`);
-      }
-      return [...prevCart, { product, quantity: initialQty, selectedSize: finalSize }];
-    });
+    const nextCart =
+      existingIdx > -1
+        ? prevCart.map((item, idx) => (idx === existingIdx ? { ...item, quantity: newQty } : item))
+        : [...prevCart, { product, quantity: newQty, selectedSize: finalSize }];
+
+    cartRef.current = nextCart;
+    setCart(nextCart);
+    trackAddToCart(product, quantityAdded);
   };
 
   const removeFromCart = (productId: string, size: string) => {

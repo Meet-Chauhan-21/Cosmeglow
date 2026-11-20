@@ -1,96 +1,76 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Container } from './Container';
 import logoImg from '../../images/logo.png';
 import { useStore } from '../../context/StoreContext';
 
+interface FooterLink {
+  name: string;
+  path: string;
+}
+
+const linkClass = 'text-white/60 hover:text-white transition-colors font-sans';
+
 export const Footer: React.FC = () => {
-  const currentYear = new Date().getFullYear();
   const { settings } = useStore();
+  const location = useLocation();
 
-  const formatWhatsAppLink = (num: string) => {
-    const cleanNum = num.replace(/\D/g, '');
-    return cleanNum.length === 10 ? `91${cleanNum}` : cleanNum;
-  };
+  const phoneDigits = (settings.whatsappNumber || '').replace(/\D/g, '');
+  const phoneWithCode = phoneDigits.length === 10 ? `91${phoneDigits}` : phoneDigits;
+  const phoneDisplay = phoneWithCode.startsWith('91') && phoneWithCode.length === 12
+    ? `+91 ${phoneWithCode.slice(2)}`
+    : settings.whatsappNumber;
 
-  const handleHashScroll = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
-    if (window.location.pathname === '/') {
-      const targetId = path.replace('/#', '');
+  // Smooth-scroll when the target is on the page that is already open.
+  const handleClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
+    if (location.pathname !== '/') return;
+
+    if (path === '/') {
+      e.preventDefault();
+      window.history.replaceState(window.history.state, '', '/');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    if (path.startsWith('/#')) {
+      const targetId = path.slice(2);
       const section = document.getElementById(targetId);
       if (section) {
         e.preventDefault();
         section.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        window.history.replaceState(null, '', '#' + targetId);
+        window.history.replaceState(window.history.state, '', `/#${targetId}`);
       }
     }
   };
 
-  const renderLink = (link: { name: string; path: string }) => {
-    if (link.path.startsWith('/#')) {
-      return (
-        <Link
-          to={link.path}
-          onClick={(e) => handleHashScroll(e, link.path)}
-          className="text-white/60 hover:text-white transition-colors font-sans"
-        >
-          {link.name}
-        </Link>
-      );
-    }
-    if (link.path.startsWith('/')) {
-      return (
-        <Link
-          to={link.path}
-          className="text-white/60 hover:text-white transition-colors font-sans"
-        >
-          {link.name}
-        </Link>
-      );
-    }
-    return (
-      <a
-        href={link.path}
-        className="text-white/60 hover:text-white transition-colors font-sans"
-      >
-        {link.name}
-      </a>
-    );
-  };
+  const renderLink = (link: FooterLink) => (
+    <Link to={link.path} onClick={(e) => handleClick(e, link.path)} className={linkClass}>
+      {link.name}
+    </Link>
+  );
 
-  const categoryLinks = [
-    { name: 'Cleansers', path: '/#shop' },
-    { name: 'Toners', path: '/#shop' },
-    { name: 'Serums', path: '/#shop' },
-    { name: 'Moisturizers', path: '/#shop' },
-    { name: 'Face Oils', path: '/#shop' },
-    { name: 'Treatment Masks', path: '/#shop' },
-  ];
-
-  const companyLinks = [
+  const companyLinks: FooterLink[] = [
     { name: 'Home', path: '/' },
-    { name: 'Shop Collection', path: '/#shop' },
-    { name: 'Privacy Policy', path: '/privacy-policy' },
-    { name: 'Terms & Conditions', path: '/terms-conditions' },
-    { name: 'My Profile', path: '/profile' },
+    { name: 'Shop', path: '/shop' },
+    { name: 'About Us', path: '/#about' },
   ];
 
-  const supportLinks = [
+  const supportLinks: FooterLink[] = [
     { name: 'Contact Us', path: '/#contact' },
-    { name: 'Story & Origin', path: '/#about' },
-    { name: 'FAQs', path: '/#about' },
     { name: 'Privacy Policy', path: '/privacy-policy' },
     { name: 'Terms & Conditions', path: '/terms-conditions' },
   ];
 
   return (
-    <footer className="bg-[#130F1A] text-white/90 pt-10 pb-6 border-t border-primary/20">
+    <footer className="bg-[#130F1A] text-white/90 pt-10 pb-8 border-t border-primary/20">
       <Container>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 mb-8">
-          
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-10">
+
           {/* Column 1 - Brand Info */}
-          <div className="lg:col-span-2 flex flex-col items-start">
+          <div className="md:col-span-2 flex flex-col items-start">
             <Link
               to="/"
+              onClick={(e) => handleClick(e, '/')}
               className="font-display text-2xl font-bold tracking-widest text-white flex items-center gap-1.5 mb-5 focus:outline-none"
             >
               <span>COSME GLOW</span>
@@ -126,111 +106,50 @@ export const Footer: React.FC = () => {
               </a>
             </div>
 
-            {/* Enlarge logo and position below social icons */}
-            <div className="mb-4 select-none">
+            <div className="select-none">
               <img src={settings.logo || logoImg} alt="CosmeGlow Logo" className="h-24 w-auto object-contain opacity-90" />
             </div>
-
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 text-xs font-semibold text-white/50 font-sans">
-              <span className="text-[10px] font-display font-semibold tracking-widest text-white/30 uppercase">CosmeGlow</span>
-              <span className="text-white/20 select-none">|</span>
-              <Link to="/terms-conditions" className="hover:text-white transition-colors">
-                Terms & Conditions
-              </Link>
-              <span className="text-white/20 select-none">|</span>
-              <Link to="/privacy-policy" className="hover:text-white transition-colors">
-                Privacy Policy
-              </Link>
-            </div>
           </div>
 
-          {/* Column 2 - Categories */}
-          <div>
-            <h4 className="font-display text-sm font-semibold tracking-wider uppercase mb-5 text-white">
-              Category
-            </h4>
-            <ul className="space-y-3 text-sm">
-              {categoryLinks.map((link) => (
-                <li key={link.name}>
-                  {renderLink(link)}
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          {/* Column 3 - Company */}
+          {/* Column 2 - Company */}
           <div>
             <h4 className="font-display text-sm font-semibold tracking-wider uppercase mb-5 text-white">
               Company
             </h4>
             <ul className="space-y-3 text-sm">
               {companyLinks.map((link) => (
-                <li key={link.name}>
-                  {renderLink(link)}
-                </li>
+                <li key={link.name}>{renderLink(link)}</li>
               ))}
             </ul>
           </div>
 
-          {/* Column 4 - Support */}
+          {/* Column 3 - Support */}
           <div>
             <h4 className="font-display text-sm font-semibold tracking-wider uppercase mb-5 text-white">
               Support
             </h4>
             <ul className="space-y-3 text-sm">
               {supportLinks.map((link) => (
-                <li key={link.name}>
-                  {renderLink(link)}
-                </li>
+                <li key={link.name}>{renderLink(link)}</li>
               ))}
-              <li className="text-white/60 font-sans pt-2.5 border-t border-white/10 mt-1">
-                <span className="block text-white/40 text-[9px] uppercase font-bold tracking-wider mb-0.5">Email Support</span>
-                <a href={`mailto:${settings.email}`} className="hover:text-white transition-colors break-all">
-                  {settings.email}
-                </a>
-              </li>
-              <li className="text-white/60 font-sans pt-1">
-                <span className="block text-white/40 text-[9px] uppercase font-bold tracking-wider mb-0.5">WhatsApp Support</span>
-                <a 
-                  href={`https://wa.me/${formatWhatsAppLink(settings.whatsappNumber)}`} 
-                  target="_blank" 
-                  rel="noreferrer" 
-                  className="hover:text-white transition-colors"
-                >
-                  {settings.whatsappNumber.startsWith('+') || settings.whatsappNumber.startsWith('91') 
-                    ? settings.whatsappNumber 
-                    : `+91 ${settings.whatsappNumber}`}
-                </a>
-              </li>
+              {settings.email && (
+                <li className="text-white/60 font-sans pt-2.5 border-t border-white/10 mt-1">
+                  <span className="block text-white/40 text-[9px] uppercase font-bold tracking-wider mb-0.5">Email</span>
+                  <a href={`mailto:${settings.email}`} className="hover:text-white transition-colors break-all">
+                    {settings.email}
+                  </a>
+                </li>
+              )}
+              {phoneWithCode && (
+                <li className="text-white/60 font-sans pt-1">
+                  <span className="block text-white/40 text-[9px] uppercase font-bold tracking-wider mb-0.5">Mobile Number</span>
+                  <a href={`tel:+${phoneWithCode}`} className="hover:text-white transition-colors">
+                    {phoneDisplay}
+                  </a>
+                </li>
+              )}
             </ul>
           </div>
-        </div>
-
-        {/* Divider & Centered Copyright and Developer block */}
-        <div className="border-t border-white/10 pt-6 flex flex-col items-center justify-center gap-2 text-center text-sm font-medium text-white/50 font-sans">
-          <p>
-            &copy; {currentYear} CosmeGlow Skincare. All rights reserved. Designed for pure restoration.
-          </p>
-          <p className="text-white/40 text-xs">
-            Developed by{' '}
-            <a
-              href="https://revolixstudio.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white/60 hover:text-primary-light transition-colors font-semibold"
-            >
-              Revolix Studio
-            </a>{' '}
-            —{' '}
-            <a
-              href="https://revolixstudio.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-white/60 hover:text-primary-light transition-colors"
-            >
-              revolixstudio.com
-            </a>
-          </p>
         </div>
       </Container>
     </footer>
