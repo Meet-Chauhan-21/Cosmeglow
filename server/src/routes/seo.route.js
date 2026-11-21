@@ -79,6 +79,7 @@ Disallow: /admin
 Disallow: /admin/*
 Disallow: /checkout
 Disallow: /profile
+Disallow: /thank-you
 
 Sitemap: ${clientUrl}/sitemap.xml
 `;

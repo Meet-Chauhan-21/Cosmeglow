@@ -9,6 +9,8 @@ export interface SEOProps {
   ogImage?: string;
   ogType?: 'website' | 'article' | 'product';
   jsonLd?: Record<string, any> | Array<Record<string, any>>;
+  /** Keep this page out of Google (e.g. the thank-you page) */
+  noindex?: boolean;
 }
 
 const PRODUCTION_DOMAIN = 'https://www.cosmeglow.com';
@@ -38,7 +40,8 @@ export const SEO: React.FC<SEOProps> = ({
   canonical,
   ogImage,
   ogType = 'website',
-  jsonLd
+  jsonLd,
+  noindex = false
 }) => {
   const siteUrl = getSiteUrl();
   const pageUrl = canonical || (typeof window !== 'undefined' ? window.location.href : siteUrl);
@@ -71,7 +74,10 @@ export const SEO: React.FC<SEOProps> = ({
       <title>{fullTitle}</title>
       <meta name="description" content={description} />
       <meta name="keywords" content={keywords} />
-      <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+      <meta
+        name="robots"
+        content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'}
+      />
       <link rel="canonical" href={pageUrl} />
 
       {/* Favicons for Google Search & Tab */}

@@ -5,6 +5,7 @@ import Profile from '../pages/Profile';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
 import Checkout from '../pages/Checkout';
+import OrderSuccess from '../pages/OrderSuccess';
 import GoogleLoginMock from '../pages/GoogleLoginMock';
 import Layout from '../components/layout/Layout';
 import Dashboard from '../pages/admin/Dashboard';
@@ -69,6 +70,10 @@ export const router = createBrowserRouter([
       {
         path: '/checkout',
         element: <Checkout />,
+      },
+      {
+        path: '/thank-you',
+        element: <OrderSuccess />,
       },
       {
         path: '/google-login-mock',

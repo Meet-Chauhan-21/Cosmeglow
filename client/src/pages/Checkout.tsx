@@ -12,61 +12,11 @@ import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
 import Container from '../components/layout/Container';
 import Button from '../components/layout/Button';
-import { PaymentSuccessModal } from '../components/checkout/PaymentSuccessModal';
 import { OtpInput } from '../components/common/OtpInput';
 
 import { API_BASE_URL } from '../config';
-import { trackInitiateCheckout, trackAddPaymentInfo, trackPurchase } from '../util/metaPixel';
-
-const formatWhatsAppMessage = (
-  orderNumber: string,
-  shippingAddress: any,
-  cartItems: any[],
-  totalAmount: number,
-  paymentMethod: string
-) => {
-  const emojiHerb = '\uD83C\uDF3F';
-  const emojiPackage = '\uD83D\uDCE6';
-  const emojiBags = '\uD83D\uDECD\uFE0F';
-  const emojiSmallSquare = '\u25AB\uFE0F';
-  const emojiDollar = '\uD83D\uDCB5';
-  const emojiPin = '\uD83D\uDCCD';
-  const emojiHouse = '\uD83C\uDFE0';
-  const emojiCity = '\uD83C\uDFD9\uFE0F';
-  const emojiIndia = '\uD83C\uDDEE\uD83C\uDDF3';
-  const emojiSeedling = '\uD83C\uDF31';
-
-  let message = `━━━━━━━━━━━━━━━━━━━━━\n`;
-  message += `${emojiHerb} *COSMEGLOW - NEW ORDER* ${emojiHerb}\n`;
-  message += `━━━━━━━━━━━━━━━━━━━━━\n\n`;
-  
-  message += `${emojiPackage} *Order Details:*\n`;
-  message += `• *Order ID:* #${orderNumber}\n`;
-  message += `• *Customer:* ${shippingAddress.name}\n`;
-  message += `• *Mobile:* ${shippingAddress.phone}\n`;
-  message += `• *Payment Method:* ${paymentMethod === 'cod' ? 'Cash on Delivery (COD)' : 'Razorpay Online Payment'}\n\n`;
-  
-  message += `${emojiBags} *Items Ordered:*\n`;
-  cartItems.forEach((item, index) => {
-    message += `${index + 1}. *${item.product.name}*\n`;
-    message += `   ${emojiSmallSquare} Qty: ${item.quantity}\n`;
-    message += `   ${emojiSmallSquare} Price: Rs. ${(item.product.price * item.quantity).toFixed(2)}\n`;
-  });
-  message += `\n`;
-  
-  message += `${emojiDollar} *Total Amount:* Rs. ${totalAmount.toFixed(2)}\n\n`;
-  
-  message += `${emojiPin} *Shipping Address:*\n`;
-  message += `${emojiHouse} ${shippingAddress.street},\n`;
-  message += `${emojiCity} ${shippingAddress.district}, ${shippingAddress.state},\n`;
-  message += `${emojiIndia} ${shippingAddress.country} - ${shippingAddress.zip}\n\n`;
-  
-  message += `━━━━━━━━━━━━━━━━━━━━━\n`;
-  message += `Thank you for choosing CosmeGlow! ${emojiSeedling}\n`;
-  message += `━━━━━━━━━━━━━━━━━━━━━`;
-  
-  return encodeURIComponent(message);
-};
+import { trackInitiateCheckout, trackAddPaymentInfo } from '../util/metaPixel';
+import { saveOrderConfirmation, type OrderConfirmation } from '../util/orderConfirmation';
 
 export const Checkout: React.FC = () => {
   const navigate = useNavigate();
@@ -318,11 +268,7 @@ export const Checkout: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [orderPlaced, setOrderPlaced] = useState(false);
-  const [orderId, setOrderId] = useState('');
-  const [confirmedTotal, setConfirmedTotal] = useState<number>(0);
-  const [lastTransactionId, setLastTransactionId] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<'razorpay' | 'cod'>('razorpay');
-  const [whatsappOrderUrl, setWhatsappOrderUrl] = useState('');
 
   const isRazorpayEnabled = settings.enableRazorpay !== false;
   const isCODEnabled = settings.enableCOD !== false;
@@ -417,43 +363,21 @@ export const Checkout: React.FC = () => {
       );
     }
 
-    // Meta Pixel: Purchase — only for the order the server just confirmed
-    trackPurchase(result?.order);
-
-    const exactTotal = result?.order?.totals?.total || total;
-    setConfirmedTotal(exactTotal);
-    setOrderId(result.order.orderNumber);
-    if (txId) setLastTransactionId(txId);
-
     if (paymentMethod === 'cod') {
-      const orderMsg = formatWhatsAppMessage(
-        result.order.orderNumber,
-        shippingAddress,
-        cart,
-        exactTotal,
-        paymentMethod
-      );
-      const formatWhatsAppLink = (num: string) => {
-        const cleanNum = num.replace(/\D/g, '');
-        return cleanNum.length === 10 ? `91${cleanNum}` : cleanNum;
-      };
-      const url = `https://wa.me/${formatWhatsAppLink(settings.whatsappNumber)}?text=${orderMsg}`;
-      setWhatsappOrderUrl(url);
-
       toast.success('Order placed successfully (Cash on Delivery)!');
-
-      // Auto open WhatsApp tab ONLY for COD orders
-      try {
-        window.open(url, '_blank');
-      } catch (e) {
-        console.error('Popup blocked by browser:', e);
-      }
     } else {
       toast.success('Razorpay Payment verified & Order confirmed!');
-      setWhatsappOrderUrl(''); // Explicitly hide WhatsApp for online payments!
     }
 
+    // Open the thank-you page. The Meta Pixel Purchase event is sent from there.
+    const confirmation: OrderConfirmation = {
+      order: result.order,
+      paymentMethod,
+      transactionId: txId,
+    };
+    saveOrderConfirmation(confirmation);
     setOrderPlaced(true);
+    navigate('/thank-you', { replace: true, state: confirmation });
     clearCart();
   };
 
@@ -1270,17 +1194,6 @@ export const Checkout: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Google Pay / Paytm Style Success Animation Modal */}
-      <PaymentSuccessModal
-        isOpen={orderPlaced}
-        orderNumber={orderId}
-        totalAmount={confirmedTotal || total}
-        paymentMethod={paymentMethod}
-        transactionId={lastTransactionId}
-        whatsappUrl={whatsappOrderUrl}
-        onClose={() => setOrderPlaced(false)}
-      />
 
       <Footer />
     </>
