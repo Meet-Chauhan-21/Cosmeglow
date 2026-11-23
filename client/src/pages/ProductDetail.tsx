@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import SEO, { ensureAbsoluteUrl } from '../components/common/SEO';
-import { Star, Heart, ShoppingBag, Plus, Minus, Check, ArrowLeft, Zap } from 'lucide-react';
+import { Star, Heart, ShoppingBag, Plus, Minus, ArrowLeft, Zap } from 'lucide-react';
 import { toast } from 'sonner';
 import Navbar from '../components/layout/Navbar';
 import Footer from '../components/layout/Footer';
@@ -488,19 +488,6 @@ const ProductDetailContent: React.FC = () => {
                   )}
                 </div>
 
-                {/* Badges Pills */}
-                <div className="flex items-center gap-2 flex-wrap text-xs font-sans font-medium">
-                  <span className="px-3 py-1 bg-gray-100 rounded-full text-dark flex items-center gap-1.5">
-                    <Check size={12} className="text-primary" /> Brightens &amp; hydrates skin
-                  </span>
-                  <span className="px-3 py-1 bg-gray-100 rounded-full text-dark flex items-center gap-1.5">
-                    <Check size={12} className="text-primary" /> Firms &amp; supports barrier
-                  </span>
-                  <span className="px-3 py-1 bg-gray-100 rounded-full text-dark flex items-center gap-1.5">
-                    <Check size={12} className="text-primary" /> 100% Bio-Organic
-                  </span>
-                </div>
-
                 {/* "Why you'll love it?" Box - ONLY SHOWN IF SPECIFIED */}
                 {Array.isArray(product.whyLoveIt) && product.whyLoveIt.length > 0 && (
                   <div className="relative mt-6 rounded-2xl border border-primary/30 p-4 sm:p-5 pt-6 bg-primary/[0.02]">
@@ -939,7 +926,8 @@ const ProductDetailContent: React.FC = () => {
             )}
           </div>
 
-          {/* Similar Products Recommendation row */}
+          {/* Similar Products Recommendation row — hidden when there is no other product */}
+          {displaySimilar.length > 0 && (
           <div className="border-t border-border-gray/60 pt-16 mt-16">
             <div className="mb-8">
               <h3 className="font-display font-semibold text-2xl text-dark tracking-tight">
@@ -1120,6 +1108,7 @@ const ProductDetailContent: React.FC = () => {
               })}
             </div>
           </div>
+          )}
 
         </Container>
       </main>
